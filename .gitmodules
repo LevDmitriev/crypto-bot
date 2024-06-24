@@ -1,0 +1,3 @@
+[submodule "v3-bitget-api-sdk"]
+	path = v3-bitget-api-sdk
+	url = https://github.com/BitgetLimited/v3-bitget-api-sdk.git
