@@ -19,6 +19,9 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
-
+    ByBit\SDK\ByBitApi:
+        arguments:
+            $key: 'e0xMGEHgCp0nJLHrVY'
+            $secret: 'WZgnTBdbUIR4HH9JYoGX2tQBtAb6OjIKMzj1'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
