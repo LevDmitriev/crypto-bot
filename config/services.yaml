@@ -18,19 +18,20 @@ services:
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
+            - '../src/TradingStrategy/'
             - '../src/Kernel.php'
     ByBit\SDK\ByBitApi:
         arguments:
             $key: 'e0xMGEHgCp0nJLHrVY'
             $secret: 'WZgnTBdbUIR4HH9JYoGX2tQBtAb6OjIKMzj1'
     App\TradingStrategy\TradingStrategyFactoryInterface:
-        class: \App\TradingStrategy\TradingStrategyFactory
+        class: App\TradingStrategy\TradingStrategyFactory
     app.serializer.bybit:
-        class: \Symfony\Component\Serializer\Serializer
+        class: Symfony\Component\Serializer\Serializer
         arguments:
-            $normalizers: ['@app.normalizer.bybit.candle']
+            $normalizers: ['@app.denormalizer.bybit.candle']
             $encoders: ['@serializer.encoder.json']
-    app.normalizer.bybit.candle:
-        class: App\Serializer\Normalizer\CandleDenormalizer
+    app.denormalizer.bybit.candle:
+        class: App\Serializer\Denormalizer\CandleDenormalizer
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

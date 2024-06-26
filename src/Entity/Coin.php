@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\CoinRepository;
 use Doctrine\ORM\Mapping as ORM;
 
+#[ORM\Table(name: 'coins')]
 #[ORM\Entity(repositoryClass: CoinRepository::class)]
 class Coin
 {

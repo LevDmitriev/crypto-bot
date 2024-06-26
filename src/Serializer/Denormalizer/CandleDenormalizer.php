@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Serializer\Normalizer;
+namespace App\Serializer\Denormalizer;
 
 use App\TradingStrategy\Candle;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
