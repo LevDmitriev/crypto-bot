@@ -9,6 +9,7 @@ use App\Entity\Order\Type;
 use App\Entity\Order\Side;
 use App\Entity\Order\Category;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use App\Entity\Order\Status;
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
 #[ORM\Table(name: 'orders')]
@@ -22,9 +23,6 @@ class Order
     private ?string $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $byBitId = null;
-
-    #[ORM\Column(length: 255)]
     private ?string $quantity = null;
 
     #[ORM\Column(length: 255)]
@@ -34,7 +32,7 @@ class Order
     #[ORM\JoinColumn(nullable: false)]
     private ?Coin $coin = null;
 
-    #[ORM\Column(enumType: Type::class)]
+    #[ORM\Column(enumType: Type::class, options: ['default' => Type::Market])]
     private ?Type $type = null;
 
     #[ORM\Column(enumType: Side::class)]
@@ -43,21 +41,12 @@ class Order
     #[ORM\Column(enumType: Category::class, options: ['default' => Category::spot])]
     private ?Category $category = null;
 
-    public function getId(): ?int
+    #[ORM\Column(enumType: Status::class, options: ['default' => Status::New])]
+    private ?Status $status = null;
+
+    public function getId(): ?string
     {
         return $this->id;
-    }
-
-    public function getByBitId(): ?string
-    {
-        return $this->byBitId;
-    }
-
-    public function setByBitId(string $byBitId): static
-    {
-        $this->byBitId = $byBitId;
-
-        return $this;
     }
 
     public function getQuantity(): ?string
@@ -128,6 +117,18 @@ class Order
     public function setCategory(Category $category): static
     {
         $this->category = $category;
+
+        return $this;
+    }
+
+    public function getStatus(): ?Status
+    {
+        return $this->status;
+    }
+
+    public function setStatus(Status $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

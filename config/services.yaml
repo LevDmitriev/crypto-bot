@@ -29,9 +29,11 @@ services:
     app.serializer.bybit:
         class: Symfony\Component\Serializer\Serializer
         arguments:
-            $normalizers: ['@app.denormalizer.bybit.candle']
+            $normalizers: ['@app.denormalizer.bybit.candle', '@app.normalizer.bybit.order']
             $encoders: ['@serializer.encoder.json']
     app.denormalizer.bybit.candle:
         class: App\Serializer\Denormalizer\CandleDenormalizer
+    app.normalizer.bybit.order:
+        class: App\Serializer\Normalizer\OrderNormalizer
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
