@@ -13,7 +13,6 @@ use App\Entity\Order\Status;
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
 #[ORM\Table(name: 'orders')]
-#[Index(name: 'bybit_id', columns: ['by_bit_id'])]
 class Order
 {
     #[ORM\Id]
@@ -25,7 +24,7 @@ class Order
     #[ORM\Column(length: 255)]
     private ?string $quantity = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $price = null;
 
     #[ORM\ManyToOne]
@@ -33,16 +32,16 @@ class Order
     private ?Coin $coin = null;
 
     #[ORM\Column(enumType: Type::class, options: ['default' => Type::Market])]
-    private ?Type $type = null;
+    private ?Type $type = Type::Market;
 
     #[ORM\Column(enumType: Side::class)]
-    private ?Side $side = null;
+    private Side $side;
 
     #[ORM\Column(enumType: Category::class, options: ['default' => Category::spot])]
-    private ?Category $category = null;
+    private Category $category = Category::spot;
 
     #[ORM\Column(enumType: Status::class, options: ['default' => Status::New])]
-    private ?Status $status = null;
+    private Status $status = Status::New;
 
     public function getId(): ?string
     {

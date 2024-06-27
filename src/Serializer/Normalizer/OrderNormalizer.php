@@ -24,10 +24,10 @@ class OrderNormalizer implements NormalizerInterface
 
         return [
             'orderLinkId' => $object->getId(),
-            'category' => $object->getCategory(),
+            'category' => $object->getCategory()->value,
             'symbol' => '', //todo
-            'side' => $object->getSide(),
-            'orderType' => $object->getType(),
+            'side' => $object->getSide()->value,
+            'orderType' => $object->getType()->value,
             'qty' => $object->getQuantity(),
             'price' => $object->getPrice(),
         ];

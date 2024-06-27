@@ -1,0 +1,24 @@
+framework:
+    workflows:
+        position:
+            type: 'workflow'
+            marking_store:
+                type: 'method'
+                property: 'status'
+            supports:
+                - App\Entity\Position
+            initial_marking: BuyOrderFullFilled
+            places:
+                BuyOrderFullFilled:
+                    name: Создан приказ на покупку
+                SellOrderCreated:
+                    name: Создан приказ на продажу
+                Closed:
+                    name: Закрыта
+            transitions:
+                to_sell_order_created:
+                    from: [BuyOrderFullFilled]
+                    to: SellOrderCreated
+                close:
+                    from: [BuyOrderFullFilled, SellOrderCreated]
+                    to: Closed
