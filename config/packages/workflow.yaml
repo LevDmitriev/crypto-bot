@@ -1,7 +1,7 @@
 framework:
     workflows:
         position:
-            type: 'workflow'
+            type: 'state_machine'
             marking_store:
                 type: 'method'
                 property: 'status'
@@ -22,3 +22,30 @@ framework:
                 close:
                     from: [BuyOrderFullFilled, SellOrderCreated]
                     to: Closed
+        order:
+            type: 'state_machine'
+            marking_store:
+                type: 'method'
+                property: 'status'
+            supports:
+                - App\Entity\Order
+            initial_marking: New
+            places:
+                New:
+                    name: Новый
+                Filled:
+                    name: Исполнен
+                Cancelling:
+                    name: Отменяется
+                Cancelled:
+                    name: Отменён
+            transitions:
+                fill:
+                    from: [ New ]
+                    to: Filled
+                start_canceling:
+                    from: [ New ]
+                    to: Cancelling
+                cancel:
+                    from: [ Cancelling ]
+                    to: Cancelled

@@ -2,14 +2,14 @@
 
 namespace App\Entity;
 
+use App\Entity\Order\ByBit\Status as ByBitStatus;
+use App\Entity\Order\ByBit\Category;
+use App\Entity\Order\ByBit\Side;
+use App\Entity\Order\ByBit\Type;
+use App\Entity\Order\Status;
 use App\Repository\OrderRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\Index;
-use App\Entity\Order\Type;
-use App\Entity\Order\Side;
-use App\Entity\Order\Category;
 use Symfony\Bridge\Doctrine\Types\UuidType;
-use App\Entity\Order\Status;
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
 #[ORM\Table(name: 'orders')]
@@ -40,9 +40,11 @@ class Order
     #[ORM\Column(enumType: Category::class, options: ['default' => Category::spot])]
     private Category $category = Category::spot;
 
+    #[ORM\Column(enumType: ByBitStatus::class, options: ['default' => ByBitStatus::New])]
+    private ByBitStatus $byBitStatus = ByBitStatus::New;
+
     #[ORM\Column(enumType: Status::class, options: ['default' => Status::New])]
     private Status $status = Status::New;
-
     public function getId(): ?string
     {
         return $this->id;
@@ -120,15 +122,31 @@ class Order
         return $this;
     }
 
-    public function getStatus(): ?Status
+    public function getByBitStatus(): ?ByBitStatus
+    {
+        return $this->byBitStatus;
+    }
+
+    public function setByBitStatus(ByBitStatus $byBitStatus): static
+    {
+        $this->byBitStatus = $byBitStatus;
+
+        return $this;
+    }
+
+    /**
+     * @return Status
+     */
+    public function getStatus(): Status
     {
         return $this->status;
     }
 
-    public function setStatus(Status $status): static
+    /**
+     * @param Status $status
+     */
+    public function setStatus(Status $status): void
     {
         $this->status = $status;
-
-        return $this;
     }
 }

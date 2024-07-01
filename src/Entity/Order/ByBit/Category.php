@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Entity\Order;
+namespace App\Entity\Order\ByBit;
 
 enum Category: string
 {

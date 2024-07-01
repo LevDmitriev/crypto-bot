@@ -10,13 +10,10 @@ use App\Messages\OrderMessage;
 use App\Messages\OrderSetStatusMessage;
 use App\Repository\OrderRepository;
 use ByBit\SDK\ByBitApi;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Обработчик проставления статуса приказу
@@ -37,7 +34,7 @@ class SendOrderToByBitHandler
     {
         /** @var Order|null $order */
         $order = $this->repository->find($message->id);
-        if ($order && $order->getStatus() === Order\Status::New) {
+        if ($order && $order->getByBitStatus() === Order\ByBit\Status::New) {
             $orderArray = $this->normalizer->normalize($order, '[]');
             $response = $this->byBitApi->tradeApi()->placeOrder($orderArray);
             if (isset($response['retCode']) && $response['retCode'] === 0) {

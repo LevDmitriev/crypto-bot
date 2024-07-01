@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\Entity\Coin;
 use App\Entity\Order;
 use App\Repository\CoinRepository;
-use ByBit\SDK\ByBitApi;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -30,7 +28,7 @@ class TestCommand extends Command
         $order = new Order();
         $order->setCoin($coin);
         $order->setQuantity('1');
-        $order->setSide(Order\Side::Buy);
+        $order->setSide(Order\ByBit\Side::Buy);
         $this->entityManager->persist($order);
         $this->entityManager->flush();
 

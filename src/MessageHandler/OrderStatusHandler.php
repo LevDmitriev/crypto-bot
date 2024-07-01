@@ -32,10 +32,10 @@ class OrderStatusHandler
     {
         /** @var Order|null $order */
         $order = $this->repository->find($message->id);
-        if ($order && $order->getStatus() === Order\Status::New) {
+        if ($order && $order->getByBitStatus() === Order\ByBit\Status::New) {
             $orderFromApi = $this->byBitApi->tradeApi()->getOpenOrders(['orderLinkId' => $message->id]);
-            if (isset($orderFromApi['orderStatus']) && $orderFromApi['orderStatus'] !== Order\Status::New) {
-                $order->setStatus($orderFromApi['orderStatus']);
+            if (isset($orderFromApi['orderStatus']) && $orderFromApi['orderStatus'] !== Order\ByBit\Status::New) {
+                $order->setByBitStatus($orderFromApi['orderStatus']);
                 $this->entityManager->persist($order);
                 $this->entityManager->flush();
                 return;

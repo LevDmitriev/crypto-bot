@@ -5,17 +5,12 @@ declare(strict_types=1);
 namespace App\Entity\Order;
 
 /**
- * @link https://bybit-exchange.github.io/docs/v5/enum#orderstatus
+ * Статусы приказов
  */
 enum Status: string
 {
     case New = 'New';
-    case PartiallyFilled = 'PartiallyFilled';
-    case Untriggered = 'Untriggered';
-    case Rejected = 'Rejected';
-    case PartiallyFilledCanceled = 'PartiallyFilledCanceled';
     case Filled = 'Filled';
+    case Cancelling = 'OnCancelling';
     case Cancelled = 'Cancelled';
-    case Triggered = 'Triggered';
-    case Deactivated = 'Deactivated';
 }

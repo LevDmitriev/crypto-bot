@@ -19,7 +19,7 @@ class CreatePositionEventListener
 
     public function createPosition(Order $order): void
     {
-        if ($order->getStatus() === Order\Status::Filled && $order->getSide() === Order\Side::Buy) {
+        if ($order->getByBitStatus() === Order\ByBit\Status::Filled && $order->getSide() === Order\ByBit\Side::Buy) {
             $position = new Position();
             $position->setBuyOrder($order);
             $this->entityManager->persist($position);
