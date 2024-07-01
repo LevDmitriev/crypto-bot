@@ -41,11 +41,11 @@ framework:
                     name: Отменён
             transitions:
                 fill:
-                    from: [ New ]
+                    from: [ New, Cancelling ]
                     to: Filled
                 start_canceling:
                     from: [ New ]
                     to: Cancelling
                 cancel:
-                    from: [ Cancelling ]
+                    from: [ New, Cancelling ]
                     to: Cancelled

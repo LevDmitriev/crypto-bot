@@ -6,7 +6,7 @@ namespace App\EventListener;
 
 use App\Entity\Order;
 use App\Messages\OrderCreatedMessage;
-use App\Messages\OrderSetStatusMessage;
+use App\Messages\OrderEnrichFromByBitMessage;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\Events;
 use Symfony\Component\Messenger\MessageBusInterface;

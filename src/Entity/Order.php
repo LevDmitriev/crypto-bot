@@ -25,16 +25,16 @@ class Order
     private ?string $quantity = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $price = null;
+    private ?int $price = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Coin $coin = null;
+    private Coin $coin;
 
     #[ORM\Column(enumType: Type::class, options: ['default' => Type::Market])]
     private ?Type $type = Type::Market;
 
-    #[ORM\Column(enumType: Side::class)]
+    #[ORM\Column(nullable: false, enumType: Side::class)]
     private Side $side;
 
     #[ORM\Column(enumType: Category::class, options: ['default' => Category::spot])]
@@ -45,6 +45,10 @@ class Order
 
     #[ORM\Column(enumType: Status::class, options: ['default' => Status::New])]
     private Status $status = Status::New;
+
+    #[ORM\Column(nullable: true)]
+    private int $averagePrice;
+
     public function getId(): ?string
     {
         return $this->id;
@@ -74,12 +78,12 @@ class Order
         return $this;
     }
 
-    public function getCoin(): ?Coin
+    public function getCoin(): Coin
     {
         return $this->coin;
     }
 
-    public function setCoin(?Coin $coin): static
+    public function setCoin(Coin $coin): static
     {
         $this->coin = $coin;
 
@@ -98,7 +102,7 @@ class Order
         return $this;
     }
 
-    public function getSide(): ?Side
+    public function getSide(): Side
     {
         return $this->side;
     }
@@ -110,7 +114,7 @@ class Order
         return $this;
     }
 
-    public function getCategory(): ?Category
+    public function getCategory(): Category
     {
         return $this->category;
     }
@@ -148,5 +152,21 @@ class Order
     public function setStatus(Status $status): void
     {
         $this->status = $status;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAveragePrice(): int
+    {
+        return $this->averagePrice;
+    }
+
+    /**
+     * @param int $averagePrice
+     */
+    public function setAveragePrice(int $averagePrice): void
+    {
+        $this->averagePrice = $averagePrice;
     }
 }

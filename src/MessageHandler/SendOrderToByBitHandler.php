@@ -7,7 +7,7 @@ namespace App\MessageHandler;
 use App\Entity\Order;
 use App\Messages\OrderCreatedMessage;
 use App\Messages\OrderMessage;
-use App\Messages\OrderSetStatusMessage;
+use App\Messages\OrderEnrichFromByBitMessage;
 use App\Repository\OrderRepository;
 use ByBit\SDK\ByBitApi;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -38,7 +38,7 @@ class SendOrderToByBitHandler
             $orderArray = $this->normalizer->normalize($order, '[]');
             $response = $this->byBitApi->tradeApi()->placeOrder($orderArray);
             if (isset($response['retCode']) && $response['retCode'] === 0) {
-                $this->messageBus->dispatch(new OrderSetStatusMessage($message->id));
+                $this->messageBus->dispatch(new OrderEnrichFromByBitMessage($message->id));
             } else {
                 $this->messageBus->dispatch($message);
             }

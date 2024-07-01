@@ -6,7 +6,7 @@ namespace App\MessageHandler;
 
 use App\Entity\Order;
 use App\Messages\OrderMessage;
-use App\Messages\OrderSetStatusMessage;
+use App\Messages\OrderEnrichFromByBitMessage;
 use App\Repository\OrderRepository;
 use ByBit\SDK\ByBitApi;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,7 +18,7 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
  * Обработчик проставления статуса приказу
  */
 #[AsMessageHandler]
-class OrderStatusHandler
+class OrderEnrichFromBybitHandler
 {
     public function __construct(
         private readonly OrderRepository $repository,
@@ -28,7 +28,7 @@ class OrderStatusHandler
     ) {
     }
 
-    public function __invoke(OrderSetStatusMessage $message)
+    public function __invoke(OrderEnrichFromByBitMessage $message)
     {
         /** @var Order|null $order */
         $order = $this->repository->find($message->id);

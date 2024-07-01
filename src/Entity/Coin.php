@@ -14,15 +14,15 @@ class Coin
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $code = null;
+    #[ORM\Column(length: 255, nullable: false)]
+    private string $code;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getCode(): ?string
+    public function getCode(): string
     {
         return $this->code;
     }

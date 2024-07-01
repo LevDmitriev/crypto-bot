@@ -25,11 +25,11 @@ class OrderNormalizer implements NormalizerInterface
         return [
             'orderLinkId' => $object->getId(),
             'category' => $object->getCategory()->value,
-            'symbol' => '', //todo
+            'symbol' => $object->getCoin()->getCode() . 'USDT',
             'side' => $object->getSide()->value,
             'orderType' => $object->getType()->value,
             'qty' => $object->getQuantity(),
-            'price' => $object->getPrice(),
+            'price' => (string) $object->getPrice() / 100,
         ];
     }
 
