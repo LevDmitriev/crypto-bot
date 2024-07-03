@@ -29,7 +29,7 @@ class OrderNormalizer implements NormalizerInterface
             'side' => $object->getSide()->value,
             'orderType' => $object->getType()->value,
             'qty' => $object->getQuantity(),
-            'price' => (string) $object->getPrice() / 100,
+            'price' => (string) ($object->getPrice() ? $object->getPrice() / 100 : null),
         ];
     }
 

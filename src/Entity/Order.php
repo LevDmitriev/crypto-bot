@@ -8,6 +8,7 @@ use App\Entity\Order\ByBit\Side;
 use App\Entity\Order\ByBit\Type;
 use App\Entity\Order\Status;
 use App\Repository\OrderRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 
@@ -22,8 +23,19 @@ class Order
     private ?string $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\AtLeastOneOf(
+        constraints: [
+        new Assert\IsNull(),
+        new Assert\Regex(pattern: "/^[0-9\.]+$/"),
+    ],
+        message: "Значение должно быть пустым или состоять только из чисел и точек"
+    )]
     private ?string $quantity = null;
 
+    /**
+     * Цена в центах
+     * @var int|null
+     */
     #[ORM\Column(length: 255, nullable: true)]
     private ?int $price = null;
 

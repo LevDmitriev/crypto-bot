@@ -10,7 +10,7 @@ framework:
              sync: 'sync://'
 
         routing:
-            \App\Messages\OrderSetStatusMessage: sync
+            \App\Messages\OrderEnrichFromByBitMessage: sync
             \App\Messages\OrderCreatedMessage: sync
             # Route your messages to the transports
             # 'App\Message\YourMessage': async

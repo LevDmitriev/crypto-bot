@@ -16,15 +16,15 @@ use Symfony\Component\Workflow\WorkflowInterface;
 #[AsEntityListener(event: Events::preUpdate, method: 'applyTransition', entity: Order::class)]
 class OrderApplyTransitionListener
 {
-    public function __construct(private WorkflowInterface $orderWorkflow)
+    public function __construct(private readonly WorkflowInterface $orderStateMachine)
     {
     }
 
     public function applyTransition(Order $order): void
     {
         match ($order->getByBitStatus()) {
-            Status::Filled => $this->orderWorkflow->apply($order, 'fill'),
-            Status::Cancelled => $this->orderWorkflow->apply($order, 'cancel')
+            Status::Filled => $this->orderStateMachine->apply($order, 'fill'),
+            Status::Cancelled => $this->orderStateMachine->apply($order, 'cancel')
         };
     }
 }
