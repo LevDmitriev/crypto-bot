@@ -6,6 +6,7 @@ namespace App\Command;
 
 use App\Entity\Order;
 use App\Repository\CoinRepository;
+use ByBit\SDK\ByBitApi;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,7 +16,8 @@ class TestCommand extends Command
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly CoinRepository $coinRepository
+        private readonly CoinRepository $coinRepository,
+        private readonly ByBitApi $byBitApi
     ) {
         parent::__construct('test:command');
     }
@@ -27,7 +29,7 @@ class TestCommand extends Command
         $coin = $this->coinRepository->findOneBy(['code' => 'BTC']);
         $order = new Order();
         $order->setCoin($coin);
-        $order->setQuantity('1');
+        $order->setQuantity(1);
         $order->setSide(Order\ByBit\Side::Buy);
         $this->entityManager->persist($order);
         $this->entityManager->flush();

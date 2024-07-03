@@ -28,8 +28,8 @@ class OrderNormalizer implements NormalizerInterface
             'symbol' => $object->getCoin()->getCode() . 'USDT',
             'side' => $object->getSide()->value,
             'orderType' => $object->getType()->value,
-            'qty' => $object->getQuantity(),
-            'price' => (string) ($object->getPrice() ? $object->getPrice() / 100 : null),
+            'qty' => (string) $object->getQuantity(),
+            'price' => (string) $object->getPrice(),
         ];
     }
 

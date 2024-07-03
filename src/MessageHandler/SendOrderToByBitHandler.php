@@ -37,7 +37,7 @@ class SendOrderToByBitHandler
         if ($order && $order->getByBitStatus() === Order\ByBit\Status::New) {
             $orderArray = $this->normalizer->normalize($order, '[]');
             $response = $this->byBitApi->tradeApi()->placeOrder($orderArray);
-            if (isset($response['retCode']) && $response['retCode'] === 0) {
+            if (isset($response['orderLinkId'])) {
                 $this->messageBus->dispatch(new OrderEnrichFromByBitMessage($message->id));
             } else {
                 $this->messageBus->dispatch($message);

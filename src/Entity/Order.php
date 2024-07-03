@@ -23,21 +23,14 @@ class Order
     private ?string $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\AtLeastOneOf(
-        constraints: [
-        new Assert\IsNull(),
-        new Assert\Regex(pattern: "/^[0-9\.]+$/"),
-    ],
-        message: "Значение должно быть пустым или состоять только из чисел и точек"
-    )]
-    private ?string $quantity = null;
+    private ?float $quantity = null;
 
     /**
      * Цена в центах
-     * @var int|null
+     * @var float|null
      */
     #[ORM\Column(length: 255, nullable: true)]
-    private ?int $price = null;
+    private ?float $price = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -55,35 +48,53 @@ class Order
     #[ORM\Column(enumType: ByBitStatus::class, options: ['default' => ByBitStatus::New])]
     private ByBitStatus $byBitStatus = ByBitStatus::New;
 
-    #[ORM\Column(enumType: Status::class, options: ['default' => Status::New])]
-    private Status $status = Status::New;
-
     #[ORM\Column(nullable: true)]
-    private int $averagePrice;
+    private string $status;
+
+    /**
+     * Средняя цена выполнения
+     * @var float
+     */
+    #[ORM\Column(nullable: true)]
+    private float $averagePrice;
+
+    /**
+     * Итоговое купленное количество
+     * @var float
+     */
+    #[ORM\Column(nullable: true)]
+    private float $cumulativeExecutedQuantity;
+
+    /**
+     * Итоговая стоимость покупки
+     * @var float
+     */
+    #[ORM\Column(nullable: true)]
+    private float $cumulativeExecutedValue;
 
     public function getId(): ?string
     {
         return $this->id;
     }
 
-    public function getQuantity(): ?string
+    public function getQuantity(): ?float
     {
         return $this->quantity;
     }
 
-    public function setQuantity(string $quantity): static
+    public function setQuantity(float $quantity): static
     {
         $this->quantity = $quantity;
 
         return $this;
     }
 
-    public function getPrice(): ?string
+    public function getPrice(): ?float
     {
         return $this->price;
     }
 
-    public function setPrice(string $price): static
+    public function setPrice(float $price): static
     {
         $this->price = $price;
 
@@ -151,34 +162,66 @@ class Order
     }
 
     /**
-     * @return Status
+     * @return string
      */
-    public function getStatus(): Status
+    public function getStatus(): string
     {
         return $this->status;
     }
 
     /**
-     * @param Status $status
+     * @param string $status
      */
-    public function setStatus(Status $status): void
+    public function setStatus(string $status): void
     {
         $this->status = $status;
     }
 
     /**
-     * @return int
+     * @return float
      */
-    public function getAveragePrice(): int
+    public function getAveragePrice(): float
     {
         return $this->averagePrice;
     }
 
     /**
-     * @param int $averagePrice
+     * @param float $averagePrice
      */
-    public function setAveragePrice(int $averagePrice): void
+    public function setAveragePrice(float $averagePrice): void
     {
         $this->averagePrice = $averagePrice;
+    }
+
+    /**
+     * @return float
+     */
+    public function getCumulativeExecutedQuantity() : float
+    {
+        return $this->cumulativeExecutedQuantity;
+    }
+
+    /**
+     * @param float $cumulativeExecutedQuantity
+     */
+    public function setCumulativeExecutedQuantity(float $cumulativeExecutedQuantity) : void
+    {
+        $this->cumulativeExecutedQuantity = $cumulativeExecutedQuantity;
+    }
+
+    /**
+     * @return float
+     */
+    public function getCumulativeExecutedValue() : float
+    {
+        return $this->cumulativeExecutedValue;
+    }
+
+    /**
+     * @param float $cumulativeExecutedValue
+     */
+    public function setCumulativeExecutedValue(float $cumulativeExecutedValue) : void
+    {
+        $this->cumulativeExecutedValue = $cumulativeExecutedValue;
     }
 }
