@@ -8,6 +8,7 @@ framework:
 #             async: '%env(MESSENGER_TRANSPORT_DSN)%'
             # failed: 'doctrine://default?queue_name=failed'
              sync: 'sync://'
+             in-memory: 'in-memory://'
              orders_created:
                  dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                  options:
@@ -29,6 +30,7 @@ framework:
         routing:
             App\Messages\OrderEnrichFromByBitMessage: orders_enrich_from_bybit
             App\Messages\OrderCreatedMessage: orders_created
+            App\Messages\PositionCreatedMessage: in-memory
 
 # when@test:
 #    framework:

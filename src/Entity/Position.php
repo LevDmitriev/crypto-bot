@@ -20,7 +20,7 @@ class Position
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
     private ?Order $sellOrder = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $status = null;
 
     public function getId(): ?int
