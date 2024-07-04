@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Serializer\Denormalizer;
 
@@ -10,11 +10,10 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 
 class OrderDenormalizer implements \Symfony\Component\Serializer\Normalizer\DenormalizerInterface
 {
-
     /**
      * @inheritDoc
      */
-    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []) : mixed
+    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
     {
         $order = $context[AbstractNormalizer::OBJECT_TO_POPULATE] ?? new Order();
         $order->setByBitStatus(ByBitStatus::from($data['orderStatus']));
@@ -39,17 +38,17 @@ class OrderDenormalizer implements \Symfony\Component\Serializer\Normalizer\Deno
         string $type,
         ?string $format = null,
         array $context = []
-    ) : bool {
+    ): bool {
         return $type == Order::class
                && is_array($data)
                && isset($data['orderLinkId'])
-            ;
+        ;
     }
 
     /**
      * @inheritDoc
      */
-    public function getSupportedTypes(?string $format) : array
+    public function getSupportedTypes(?string $format): array
     {
         return [Order::class => true];
     }

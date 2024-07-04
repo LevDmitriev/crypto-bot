@@ -19,10 +19,12 @@ enum Status: string
     case Triggered = 'Triggered';
     case Deactivated = 'Deactivated';
 
-    public static function isOpenStatus(Status $status): bool {
+    public static function isOpenStatus(Status $status): bool
+    {
         return in_array($status, [self::New, self::PartiallyFilled, self::Untriggered]);
     }
-    public static function isClosedStatus(Status $status): bool {
+    public static function isClosedStatus(Status $status): bool
+    {
         $statuses = [
             self::Rejected,
             self::PartiallyFilledCanceled,

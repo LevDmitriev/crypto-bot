@@ -26,7 +26,7 @@ class Order
     private ?float $quantity = null;
 
     /**
-     * Цена в центах
+     * Цена
      * @var float|null
      */
     #[ORM\Column(length: 255, nullable: true)]
@@ -196,7 +196,7 @@ class Order
     /**
      * @return float
      */
-    public function getCumulativeExecutedQuantity() : float
+    public function getCumulativeExecutedQuantity(): float
     {
         return $this->cumulativeExecutedQuantity;
     }
@@ -204,7 +204,7 @@ class Order
     /**
      * @param float $cumulativeExecutedQuantity
      */
-    public function setCumulativeExecutedQuantity(float $cumulativeExecutedQuantity) : void
+    public function setCumulativeExecutedQuantity(float $cumulativeExecutedQuantity): void
     {
         $this->cumulativeExecutedQuantity = $cumulativeExecutedQuantity;
     }
@@ -212,7 +212,7 @@ class Order
     /**
      * @return float
      */
-    public function getCumulativeExecutedValue() : float
+    public function getCumulativeExecutedValue(): float
     {
         return $this->cumulativeExecutedValue;
     }
@@ -220,7 +220,7 @@ class Order
     /**
      * @param float $cumulativeExecutedValue
      */
-    public function setCumulativeExecutedValue(float $cumulativeExecutedValue) : void
+    public function setCumulativeExecutedValue(float $cumulativeExecutedValue): void
     {
         $this->cumulativeExecutedValue = $cumulativeExecutedValue;
     }
