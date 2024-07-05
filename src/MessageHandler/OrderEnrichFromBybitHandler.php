@@ -7,7 +7,7 @@ namespace App\MessageHandler;
 use App\Entity\Order;
 use App\Entity\Order\ByBit\Status as ByBitStatus;
 use App\Messages\OrderEnrichFromByBitMessage;
-use App\Repository\OrderRepository;
+use App\Repository\PositionRepository;
 use ByBit\SDK\ByBitApi;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -24,7 +24,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class OrderEnrichFromBybitHandler
 {
     public function __construct(
-        private readonly OrderRepository $repository,
+        private readonly PositionRepository $repository,
         private readonly ByBitApi $byBitApi,
         private readonly EntityManagerInterface $entityManager,
         private readonly MessageBusInterface $messageBus,

@@ -8,7 +8,7 @@ use App\Entity\Order;
 use App\Messages\OrderCreatedMessage;
 use App\Messages\OrderMessage;
 use App\Messages\OrderEnrichFromByBitMessage;
-use App\Repository\OrderRepository;
+use App\Repository\PositionRepository;
 use ByBit\SDK\ByBitApi;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -22,7 +22,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 class SendOrderToByBitHandler
 {
     public function __construct(
-        private readonly OrderRepository $repository,
+        private readonly PositionRepository $repository,
         private readonly ByBitApi $byBitApi,
         #[Autowire(service: 'app.serializer.bybit')]
         private readonly NormalizerInterface $normalizer,

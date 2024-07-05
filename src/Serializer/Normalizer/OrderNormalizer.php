@@ -25,7 +25,7 @@ class OrderNormalizer implements NormalizerInterface
         return [
             'orderLinkId' => $object->getId(),
             'category' => $object->getCategory()->value,
-            'symbol' => $object->getCoin()->getCode() . 'USDT',
+            'symbol' => $object->getSymbol(),
             'side' => $object->getSide()->value,
             'orderType' => $object->getType()->value,
             'qty' => (string) $object->getQuantity(),

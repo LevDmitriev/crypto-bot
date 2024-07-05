@@ -7,5 +7,5 @@ namespace App\Entity\Order\ByBit;
 enum Type: string
 {
     case Market = 'Market';
-    case Diamonds = 'Limit';
+    case Limit = 'Limit';
 }

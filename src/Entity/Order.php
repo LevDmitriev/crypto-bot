@@ -7,12 +7,12 @@ use App\Entity\Order\ByBit\Category;
 use App\Entity\Order\ByBit\Side;
 use App\Entity\Order\ByBit\Type;
 use App\Entity\Order\Status;
-use App\Repository\OrderRepository;
+use App\Repository\PositionRepository;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 
-#[ORM\Entity(repositoryClass: OrderRepository::class)]
+#[ORM\Entity(repositoryClass: PositionRepository::class)]
 #[ORM\Table(name: 'orders')]
 class Order
 {
@@ -223,5 +223,10 @@ class Order
     public function setCumulativeExecutedValue(float $cumulativeExecutedValue): void
     {
         $this->cumulativeExecutedValue = $cumulativeExecutedValue;
+    }
+
+    public function getSymbol(): string
+    {
+        return $this->getCoin()?->getCode() . 'USDT';
     }
 }
