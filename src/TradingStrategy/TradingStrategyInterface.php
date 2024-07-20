@@ -2,16 +2,28 @@
 
 namespace App\TradingStrategy;
 
+use App\Entity\Position;
+
 /**
  * Интерфейс торговой стратегии
  */
 interface TradingStrategyInterface
 {
     /**
-     * Обработать свечу
-     * @param CandleInterface $candle
-     *
-     * @return void
+     * Подождать до момента, когда следует открывать позицию и открываем её
+     * @return Position
      */
-    public function handleCandle(CandleInterface $candle): void;
+    public function waitAndOpenPosition(): Position;
+
+    /**
+     * Подождать до момента, когда следует закрывать позицию и закрываем её
+     * @return Position
+     */
+    public function waitAndClosePosition(): Position;
+
+    /**
+     * Есть ли уже открытая позиция?
+     * @return bool
+     */
+    public function hasOpenedPosition(): bool;
 }

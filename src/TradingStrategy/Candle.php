@@ -16,6 +16,7 @@ class Candle implements CandleInterface
         private readonly string $closePrice,
         private readonly string $highestPrice,
         private readonly string $lowestPrice,
+        private readonly string $volume
     ) {
     }
 
@@ -65,5 +66,10 @@ class Candle implements CandleInterface
     public function getHighestPrice(): string
     {
         return $this->highestPrice;
+    }
+
+    public function getVolume(): string
+    {
+        return $this->volume;
     }
 }

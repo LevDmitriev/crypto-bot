@@ -24,6 +24,7 @@ class CandleDenormalizer implements DenormalizerInterface
             closePrice: $data['close'],
             highestPrice: $data['high'],
             lowestPrice: $data['low'],
+            volume: $data['volume'],
         );
     }
 

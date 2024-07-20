@@ -42,4 +42,10 @@ interface CandleInterface
      * @return string
      */
     public function getHighestPrice(): string;
+
+    /**
+     * Получить объём торгов
+     * @return string
+     */
+    public function getVolume(): string;
 }

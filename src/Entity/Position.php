@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Position\Status;
 use App\Repository\PositionRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -9,13 +10,19 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: PositionRepository::class)]
 class Position
 {
+    public function __construct(Order $buyOrder)
+    {
+        $this->buyOrder = $buyOrder;
+        $this->coin = $buyOrder->getCoin();
+    }
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
-    private ?Order $buyOrder = null;
+    private Order $buyOrder;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
     private ?Order $sellOrder = null;
@@ -28,12 +35,12 @@ class Position
         return $this->id;
     }
 
-    public function getBuyOrder(): ?Order
+    public function getBuyOrder(): Order
     {
         return $this->buyOrder;
     }
 
-    public function setBuyOrder(?Order $buyOrder): static
+    public function setBuyOrder(Order $buyOrder): static
     {
         $this->buyOrder = $buyOrder;
 
@@ -62,5 +69,15 @@ class Position
         $this->status = $status;
 
         return $this;
+    }
+
+    public function getCoin(): Coin
+    {
+        return $this->getBuyOrder()->getCoin();
+    }
+
+    public function isOpened(): bool
+    {
+        return $this->getSellOrder() !== Status::Closed;
     }
 }

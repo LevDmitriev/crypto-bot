@@ -52,7 +52,7 @@ class WatchCandlesCommand extends Command
                 $json = json_decode($message->getContent(), true);
                 if (isset($json['data'][0])) {
                     $candle = $this->denormalizer->denormalize($json['data'][0], Candle::class);
-                    $strategy->handleCandle($candle);
+                    $strategy->trade($candle);
                 }
             })
             ->start();

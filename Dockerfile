@@ -33,6 +33,7 @@ RUN set -eux; \
 		zip \
 		pdo_pgsql \
 		amqp \
+    	bcmath \
 	;
 
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
