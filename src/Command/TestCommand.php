@@ -26,13 +26,8 @@ class TestCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $coin = $this->coinRepository->findOneBy(['code' => 'BTC']);
-        $order = new Order();
-        $order->setCoin($coin);
-        $order->setQuantity(1);
-        $order->setSide(Order\ByBit\Side::Buy);
-        $this->entityManager->persist($order);
-        $this->entityManager->flush();
+        $result = $this->byBitApi->marketApi()->getInstrumentsInfo(['category'=> 'spot', 'symbol'=>'BTCUSDT']);
+        echo print_r($result, true);
 
         return self::SUCCESS;
     }

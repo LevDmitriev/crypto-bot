@@ -27,10 +27,17 @@ class Order
 
     /**
      * Цена
-     * @var float|null
+     * @var string|null
      */
     #[ORM\Column(length: 255, nullable: true)]
-    private ?float $price = null;
+    private ?string $price = null;
+
+    /**
+     * Цена, при которой будет автоматически выставлен приказ на продажу по рынку.
+     * @var string|null
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stopLossPrice = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -89,12 +96,12 @@ class Order
         return $this;
     }
 
-    public function getPrice(): ?float
+    public function getPrice(): ?string
     {
         return $this->price;
     }
 
-    public function setPrice(float $price): static
+    public function setPrice(string $price): static
     {
         $this->price = $price;
 
@@ -228,5 +235,16 @@ class Order
     public function getSymbol(): string
     {
         return $this->getCoin()?->getCode() . 'USDT';
+    }
+
+    public function getStopLossPrice(): ?string
+    {
+        return $this->stopLossPrice;
+    }
+
+    public function setStopLossPrice(?string $stopLossPrice): static
+    {
+        $this->stopLossPrice = $stopLossPrice;
+        return $this;
     }
 }
