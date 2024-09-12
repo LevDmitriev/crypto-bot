@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Order\ByBit\Status as ByBitStatus;
 use App\Entity\Position\Status;
 use App\Repository\PositionRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -12,6 +13,8 @@ class Position
 {
     public function __construct(Order $buyOrder)
     {
+        // Позиция может быть создана только на полностью выполненном приказе на покупку
+        assert($buyOrder->getByBitStatus() === ByBitStatus::Filled);
         $this->buyOrder = $buyOrder;
         $this->coin = $buyOrder->getCoin();
     }
@@ -23,6 +26,9 @@ class Position
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
     private Order $buyOrder;
+
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    private Order $stopOrder;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
     private ?Order $sellOrder = null;
@@ -79,5 +85,15 @@ class Position
     public function isOpened(): bool
     {
         return $this->getSellOrder() !== Status::Closed;
+    }
+
+    public function getStopOrder(): Order
+    {
+        return $this->stopOrder;
+    }
+
+    public function setStopOrder(Order $stopOrder): void
+    {
+        $this->stopOrder = $stopOrder;
     }
 }

@@ -6,6 +6,7 @@ namespace App\TradingStrategy;
 
 use App\Entity\Coin;
 use App\Entity\Order;
+use App\Entity\Order\ByBit\Status;
 use App\Entity\Position;
 use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
@@ -40,6 +41,7 @@ class CatchPumpStrategy implements TradingStrategyInterface
 
     public function waitAndOpenPosition(): Position
     {
+        assert(!$this->position);
         while (!$this->position && sleep(60) === 0) {
             $klines7hours = $this->byBitApi->marketApi()->getKline([
                 'category' => 'spot',
@@ -61,10 +63,16 @@ class CatchPumpStrategy implements TradingStrategyInterface
             $candles30to15minutes = $this->createCandlesCollection(array_slice($kline30minutes['list'], 14, 15));
             /** @var string $priceChange Изменение цены */
             $priceChange = bcdiv($candles15minutes->getClosePrice(), $candles7hours->getHighestPrice(), 2);
-            // Если объем торгов увеличился на 30% и более и цена увеличилась более чем на 2% - открываем позицию
-            $volumeChange = (float)bcdiv($candles15minutes->getVolume(), $candles30to15minutes->getVolume(), 2);
-            if ($volumeChange > 1.3 && bccomp($priceChange, '1.02') >= 0) {
-                $this->position = $this->createPosition();
+            /*
+            * Открываем позицию если:
+            * - объём торгов увеличился на 30% и более
+            * - цена увеличилась на 2%
+            * - Депозита хватает чтобы купить хотя бы 0.0001 монету(Ограничение API)
+            */
+            $volumeChange = bcdiv($candles15minutes->getVolume(), $candles30to15minutes->getVolume(), 2);
+            $deposit = $this->accountRepository->getDeposit();
+            if (bccomp($volumeChange, "1.3") >= 0 && bccomp($priceChange, '1.02') >= 0 && bcdiv($candles15minutes->getClosePrice(), $deposit) >= '0.0001') {
+                $this->position = $this->createPosition($candles15minutes->getClosePrice());
                 $this->entityManager->persist($this->position);
                 $this->entityManager->flush();
             }
@@ -127,14 +135,31 @@ class CatchPumpStrategy implements TradingStrategyInterface
             $scale
         );
         $price = bcdiv(bcmul($risk, '100', $scale), $stopPercent, $scale);
-        $order = (new Order())
+        $buyOrder = (new Order())
             ->setPrice($price)
+            ->setCoin($this->coin)
             ->setSide(Order\ByBit\Side::Buy)
             ->setCategory(Order\ByBit\Category::spot)
             ->setType(Order\ByBit\Type::Market)
-            ->setStopLossPrice($stopPrice)
         ;
-        $position = new Position($order);
+        $this->entityManager->persist($buyOrder);
+        $this->entityManager->flush();
+        // Ждём пока приказ на покупку не будет полностью выполнен
+        while(sleep(5) && Status::isOpenStatus($buyOrder->getByBitStatus())) {
+            $this->entityManager->refresh($buyOrder);
+        }
+        $stopOrder = (new Order())
+            ->setTriggerPrice($stopPrice)
+            ->setQuantity($buyOrder->getQuantity())
+            ->setCoin($this->coin)
+            ->setSide(Order\ByBit\Side::Sell)
+            ->setCategory(Order\ByBit\Category::spot)
+            ->setType(Order\ByBit\Type::Market)
+            ->setOrderFilter(Order\ByBit\OrderFilter::StopOrder)
+        ;
+
+        $position = new Position($buyOrder);
+        $position->setStopOrder($stopOrder);
 
         return $position;
     }

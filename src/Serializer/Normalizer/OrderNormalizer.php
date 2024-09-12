@@ -25,11 +25,12 @@ class OrderNormalizer implements NormalizerInterface
         return [
             'orderLinkId' => $object->getId(),
             'category' => $object->getCategory()->value,
+            'orderFilter' => $object->getOrderFilter()->value,
             'symbol' => $object->getSymbol(),
             'side' => $object->getSide()->value,
             'orderType' => $object->getType()->value,
-            'qty' => (string) $object->getQuantity(),
-            'price' => (string) $object->getPrice(),
+            'qty' => $object->getType() === Order\ByBit\Type::Limit ? (string) $object->getQuantity() : (string) $object->getPrice(),
+            'price' => $object->getType() === Order\ByBit\Type::Limit ? (string) $object->getPrice() : null,
         ];
     }
 

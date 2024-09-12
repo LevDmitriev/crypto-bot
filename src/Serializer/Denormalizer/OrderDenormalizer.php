@@ -18,12 +18,15 @@ class OrderDenormalizer implements \Symfony\Component\Serializer\Normalizer\Deno
         $order = $context[AbstractNormalizer::OBJECT_TO_POPULATE] ?? new Order();
         $order->setByBitStatus(ByBitStatus::from($data['orderStatus']));
         if ($data['cumExecQty']) {
-            $order->setCumulativeExecutedQuantity((float) $data['cumExecQty']);
+            $order->setCumulativeExecutedQuantity($data['cumExecQty']);
+        }
+        if ($data['triggerPrice']) {
+            $order->setTriggerPrice($data['triggerPrice']);
         }
         if ($data['avgPrice']) {
             $order->setAveragePrice((float) $data['avgPrice']);
             if ($data['cumExecQty']) {
-                $order->setCumulativeExecutedValue((float) ($data['avgPrice'] * $data['cumExecQty']));
+                $order->setCumulativeExecutedValue(bcmul($data['avgPrice'], $data['cumExecQty'], 2));
             }
         }
 

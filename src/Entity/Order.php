@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Order\ByBit\OrderFilter;
 use App\Entity\Order\ByBit\Status as ByBitStatus;
 use App\Entity\Order\ByBit\Category;
 use App\Entity\Order\ByBit\Side;
@@ -31,6 +32,19 @@ class Order
      */
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $price = null;
+    /**
+     * Цена срабатывания условного приказа
+     * @var string|null
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $triggerPrice = null;
+
+    /**
+     * Цена срабатывания условного приказа
+     * @var OrderFilter
+     */
+    #[ORM\Column(enumType: OrderFilter::class, options: ['default' => OrderFilter::Order])]
+    private OrderFilter $orderFilter = OrderFilter::Order;
 
     /**
      * Цена, при которой будет автоматически выставлен приказ на продажу по рынку.
@@ -67,10 +81,10 @@ class Order
 
     /**
      * Итоговое купленное количество
-     * @var float
+     * @var string
      */
     #[ORM\Column(nullable: true)]
-    private float $cumulativeExecutedQuantity;
+    private string $cumulativeExecutedQuantity;
 
     /**
      * Итоговая стоимость покупки
@@ -201,17 +215,17 @@ class Order
     }
 
     /**
-     * @return float
+     * @return string
      */
-    public function getCumulativeExecutedQuantity(): float
+    public function getCumulativeExecutedQuantity(): string
     {
         return $this->cumulativeExecutedQuantity;
     }
 
     /**
-     * @param float $cumulativeExecutedQuantity
+     * @param string $cumulativeExecutedQuantity
      */
-    public function setCumulativeExecutedQuantity(float $cumulativeExecutedQuantity): void
+    public function setCumulativeExecutedQuantity(string $cumulativeExecutedQuantity): void
     {
         $this->cumulativeExecutedQuantity = $cumulativeExecutedQuantity;
     }
@@ -246,5 +260,25 @@ class Order
     {
         $this->stopLossPrice = $stopLossPrice;
         return $this;
+    }
+
+    public function getTriggerPrice(): ?string
+    {
+        return $this->triggerPrice;
+    }
+
+    public function setTriggerPrice(?string $triggerPrice): self
+    {
+        $this->triggerPrice = $triggerPrice;
+    }
+
+    public function getOrderFilter(): OrderFilter
+    {
+        return $this->orderFilter;
+    }
+
+    public function setOrderFilter(OrderFilter $orderFilter): self
+    {
+        $this->orderFilter = $orderFilter;
     }
 }
