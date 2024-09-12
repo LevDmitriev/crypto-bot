@@ -22,8 +22,8 @@ services:
             - '../src/Kernel.php'
     ByBit\SDK\ByBitApi:
         arguments:
-            $key: 'e0xMGEHgCp0nJLHrVY'
-            $secret: 'WZgnTBdbUIR4HH9JYoGX2tQBtAb6OjIKMzj1'
+            $key: 'rMYSYkIoDbFrWY8cEU'
+            $secret: 'S0BvBGFeqz6OsXIMJ7NxQt1FaAgNcuJQoSOg'
     App\TradingStrategy\TradingStrategyFactoryInterface:
         class: App\TradingStrategy\TradingStrategyFactory
     app.serializer.bybit:
