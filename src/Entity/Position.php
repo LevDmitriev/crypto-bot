@@ -84,7 +84,12 @@ class Position
 
     public function isOpened(): bool
     {
-        return $this->getSellOrder() !== Status::Closed;
+        return $this->getSellOrder()?->getStatus() !== Status::Closed && $this->getStopOrder()?->getStatus() !== Status::Closed;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->getSellOrder()?->getStatus() == Status::Closed || $this->getStopOrder()?->getStatus() == Status::Closed;
     }
 
     public function getStopOrder(): Order

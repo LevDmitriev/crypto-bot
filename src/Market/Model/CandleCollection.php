@@ -1,8 +1,11 @@
 <?php
 
-namespace App\TradingStrategy;
+namespace App\Market\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
+
+use function App\TradingStrategy\bcadd;
+use function App\TradingStrategy\bccomp;
 
 /**
  * Коллекция свечей

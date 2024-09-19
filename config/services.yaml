@@ -26,13 +26,19 @@ services:
             $secret: 'S0BvBGFeqz6OsXIMJ7NxQt1FaAgNcuJQoSOg'
     App\TradingStrategy\TradingStrategyFactoryInterface:
         class: App\TradingStrategy\TradingStrategyFactory
+    App\Market\Repository\CandleRepository:
+        arguments:
+            $denormalizer: '@app.serializer.bybit'
+            $marketApi:  '@=service("ByBit\\SDK\\ByBitApi").marketApi()'
     app.serializer.bybit:
         class: Symfony\Component\Serializer\Serializer
         arguments:
-            $normalizers: ['@app.denormalizer.bybit.candle', '@app.normalizer.bybit.order', '@app.denormalizer.bybit.order']
+            $normalizers: ['@app.denormalizer.bybit.candle', '@app.normalizer.bybit.order', '@app.denormalizer.bybit.order', '@app.denormalizer.bybit.candles']
             $encoders: ['@serializer.encoder.json']
     app.denormalizer.bybit.candle:
         class: App\Serializer\Denormalizer\CandleDenormalizer
+    app.denormalizer.bybit.candles:
+        class: App\Serializer\Denormalizer\CandleCollectionDenormalizer
     app.denormalizer.bybit.order:
         class: App\Serializer\Denormalizer\OrderDenormalizer
     app.normalizer.bybit.order:

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TradingStrategy;
+namespace App\Market\Model;
 
 /**
  * Свеча
@@ -11,12 +11,12 @@ class Candle implements CandleInterface
 {
     public function __construct(
         private readonly int $startTime,
-        private readonly int $endTime,
         private readonly string $openPrice,
         private readonly string $closePrice,
         private readonly string $highestPrice,
         private readonly string $lowestPrice,
-        private readonly string $volume
+        private readonly string $volume,
+        private readonly string $turnover
     ) {
     }
 
@@ -26,14 +26,6 @@ class Candle implements CandleInterface
     public function getStartTime(): int
     {
         return $this->startTime;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getEndTime(): int
-    {
-        return $this->endTime;
     }
 
     /**
@@ -71,5 +63,10 @@ class Candle implements CandleInterface
     public function getVolume(): string
     {
         return $this->volume;
+    }
+
+    public function getTurnover(): string
+    {
+        return $this->turnover;
     }
 }

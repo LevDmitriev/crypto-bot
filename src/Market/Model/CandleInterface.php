@@ -1,6 +1,6 @@
 <?php
 
-namespace App\TradingStrategy;
+namespace App\Market\Model;
 
 /**
  * Интерфейс свечи
@@ -12,12 +12,6 @@ interface CandleInterface
      * @return int
      */
     public function getStartTime(): int;
-
-    /**
-     * Получить дату окончания
-     * @return int
-     */
-    public function getEndTime(): int;
 
     /**
      * Получить цену открытия

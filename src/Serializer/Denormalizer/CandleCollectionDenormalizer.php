@@ -5,28 +5,28 @@ declare(strict_types=1);
 namespace App\Serializer\Denormalizer;
 
 use App\Market\Model\Candle;
+use App\Market\Model\CandleCollection;
+use Symfony\Component\Serializer\Normalizer\DenormalizerAwareInterface;
+use Symfony\Component\Serializer\Normalizer\DenormalizerAwareTrait;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
 /**
  * Денормализатор свечей
  */
-class CandleDenormalizer implements DenormalizerInterface
+class CandleCollectionDenormalizer implements DenormalizerInterface, DenormalizerAwareInterface
 {
+    use DenormalizerAwareTrait;
     /**
      * @inheritDoc
      */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
     {
-        return new Candle(
-            startTime:  (int) $data[0],
-            endTime:    (int) $data[0] + 3600 * 1000,
-            openPrice: $data[1],
-            highestPrice: $data[2],
-            lowestPrice: $data[3],
-            closePrice: $data[4],
-            volume: $data[5],
-            turnover: $data[6],
-        );
+        $collection = new CandleCollection();
+        foreach ($data as $kline) {
+            return $collection->add($this->denormalize($kline, Candle::class));
+        }
+
+        return $collection;
     }
 
     /**
@@ -38,7 +38,7 @@ class CandleDenormalizer implements DenormalizerInterface
         ?string $format = null,
         array $context = []
     ): bool {
-        return $type == Candle::class;
+        return $type == CandleCollection::class;
     }
 
     /**
@@ -46,6 +46,6 @@ class CandleDenormalizer implements DenormalizerInterface
      */
     public function getSupportedTypes(?string $format): array
     {
-        return [Candle::class => true];
+        return [CandleCollection::class => true];
     }
 }

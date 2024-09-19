@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\TradingStrategy\Candle;
+use App\Market\Model\Candle;
 use App\TradingStrategy\TradingStrategyFactoryInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
