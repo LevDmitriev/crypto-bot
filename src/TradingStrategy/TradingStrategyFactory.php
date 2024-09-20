@@ -20,7 +20,7 @@ class TradingStrategyFactory implements TradingStrategyFactoryInterface
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly PositionRepository $positionRepository,
-        #[Autowire(service: 'app.serializer.bybit')]
+        //        #[Autowire(service: 'app.serializer.bybit')]
         private readonly DenormalizerInterface $denormalizer,
         private readonly ByBitApi $byBitApi
     ) {

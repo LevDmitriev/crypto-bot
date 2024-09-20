@@ -14,7 +14,7 @@ class CandleRepository implements CandleRepositoryInterface
     }
 
     /**
-     * Получить коллекцию свечей
+     * Получить коллекцию свечей по фильтрам
      * @link https://bybit-exchange.github.io/docs/v5/market/kline
      * @param string $symbol
      * @param string $interval
@@ -38,5 +38,20 @@ class CandleRepository implements CandleRepositoryInterface
         /** @var CandleCollection $collection */
         $collection = $this->denormalizer->denormalize($klines['list'], CandleCollection::class);
         return $collection;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getLastTradedPrice(string $symbol, string $category = Category::spot->value): string
+    {
+        $klines = $this->marketApi->getKline([
+            'category' => $category,
+            'symbol' => $symbol,
+            'interval' => 1,
+            'limit' => 1,
+        ]);
+
+        return $klines['list'][0][4];
     }
 }

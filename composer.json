@@ -7,6 +7,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.3.8",
+        "ext-bcmath": "*",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "doctrine/dbal": "^3",
@@ -21,6 +22,7 @@
         "symfony/amqp-messenger": "7.1.*",
         "symfony/console": "7.1.*",
         "symfony/dotenv": "7.1.*",
+        "symfony/expression-language": "7.1.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "7.1.*",
         "symfony/messenger": "7.1.*",
@@ -31,8 +33,7 @@
         "symfony/uid": "7.1.*",
         "symfony/validator": "7.1.*",
         "symfony/workflow": "7.1.*",
-        "symfony/yaml": "7.1.*",
-        "ext-bcmath": "*"
+        "symfony/yaml": "7.1.*"
     },
     "config": {
         "allow-plugins": {

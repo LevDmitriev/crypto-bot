@@ -10,16 +10,22 @@ use App\Entity\Position;
 interface TradingStrategyInterface
 {
     /**
-     * Подождать до момента, когда следует открывать позицию и открываем её
+     * Открыть позицию
      * @return Position
      */
-    public function waitAndOpenPosition(): Position;
+    public function openPosition(): Position;
 
     /**
-     * Подождать до момента, когда следует закрывать позицию и закрываем её
+     * Можно открывать позицию
+     * @return bool
+     */
+    public function canOpenPosition(): bool;
+
+    /**
+     * Закрыть позицию
      * @return Position
      */
-    public function waitAndClosePosition(): Position;
+    public function сlosePosition(): Position;
 
     /**
      * Есть ли уже открытая позиция?

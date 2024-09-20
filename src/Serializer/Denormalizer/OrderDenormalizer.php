@@ -42,10 +42,7 @@ class OrderDenormalizer implements \Symfony\Component\Serializer\Normalizer\Deno
         ?string $format = null,
         array $context = []
     ): bool {
-        return $type == Order::class
-               && is_array($data)
-               && isset($data['orderLinkId'])
-        ;
+        return $type == Order::class;
     }
 
     /**

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Serializer\Denormalizer;
+namespace App\Market\Serializer\Denormalizer;
 
 use App\Market\Model\Candle;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
@@ -18,12 +18,11 @@ class CandleDenormalizer implements DenormalizerInterface
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
     {
         return new Candle(
-            startTime:  (int) $data[0],
-            endTime:    (int) $data[0] + 3600 * 1000,
+            startTime: (int) $data[0],
             openPrice: $data[1],
+            closePrice: $data[4],
             highestPrice: $data[2],
             lowestPrice: $data[3],
-            closePrice: $data[4],
             volume: $data[5],
             turnover: $data[6],
         );

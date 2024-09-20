@@ -8,6 +8,7 @@ use App\Entity\Coin;
 use App\Entity\Order;
 use App\Entity\Order\ByBit\Status;
 use App\Entity\Position;
+use App\Market\Model\CandleCollection;
 use App\Market\Model\CandleInterface;
 use App\Market\Repository\CandleRepositoryInterface;
 use App\Repository\AccountRepository;
@@ -23,72 +24,61 @@ class CatchPumpStrategy implements TradingStrategyInterface
     public function __construct(
         private readonly Coin                      $coin,
         private readonly EntityManagerInterface    $entityManager,
-        private readonly PositionRepository        $positionRepository,
         private readonly CandleRepositoryInterface $candleRepository,
-        private AccountRepository                  $accountRepository,
+        private readonly PositionRepository $positionRepository,
+        private readonly AccountRepository         $accountRepository,
         private ?Position                          $position = null
     ) {
     }
 
-    public function waitAndOpenPosition(): Position
+    /**
+     * @inheritDoc
+     */
+    public function canOpenPosition(): bool
+    {
+        /** @var CandleCollection $candles7hours 7 часовая свечка */
+        $candles7hours = $this->candleRepository->find(symbol: $this->coin->getCode() . 'USDT', interval: '15', limit: 28);
+        /** @var CandleCollection $candles7hoursExceptLast15Minutes 7 часовая свечка не включая последние 15 минут */
+        $candles7hoursExceptLast15Minutes = new CandleCollection($candles7hours->slice(0, 27));
+        /** @var CandleInterface $candleLast15minutes Последняя 15 минутная свечка */
+        $candleLast15minutes = new CandleCollection($candles7hours->slice(27, 1));
+        /** @var CandleInterface $candlePrevious15minutes Предыдущая 15 минутная свечка */
+        $candlePrevious15minutes = new CandleCollection($candles7hours->slice(26, 1));
+        /** @var string $priceChange Изменение цены */
+        $priceChange = bcdiv($candleLast15minutes->getClosePrice(), $candles7hoursExceptLast15Minutes->getHighestPrice(), 2);
+        $volumeChange = bcdiv($candleLast15minutes->getVolume(), $candlePrevious15minutes->getVolume(), 2);
+        /*
+        * Открываем позицию если:
+        * - по монете нет открытой позиции
+        * - по монете нет открытой позиции
+        * - объём торгов увеличился на 30% и более
+        * - цена увеличилась на 2% и более
+        * - Депозита хватает чтобы купить хотя бы 0.0001 монету(Ограничение API)
+        */
+        $walletBalance = $this->accountRepository->getWalletBalance();
+        return !$this->hasOpenedPosition()
+            && bccomp($volumeChange, "1.3", 2) >= 0
+            && bccomp($priceChange, '1.02', 2) >= 0
+            && bcdiv($walletBalance->totalAvailableBalance, $candleLast15minutes->getClosePrice(), 4) >= '0.0001'
+            && $this->positionRepository->getTotalCount() < 5
+        ;
+    }
+
+    public function openPosition(): Position
     {
         assert(!$this->position);
-        while (!$this->position && sleep(60) === 0) {
-            /** @var CandleInterface $candles7hours 7 часовая свечка */
-            $candles7hours = $this->candleRepository->find(symbol: $this->coin->getCode() . 'USDT', interval: '1', limit: 420);
-            $candles30minutes = $this->candleRepository->find(symbol: $this->coin->getCode() . 'USDT', interval: '1', limit: 30);
-            /** @var CandleInterface $candle15minutes Последняя 15 минутная свечка */
-            $candle15minutes = $candles30minutes->slice(0, 15);
-            /** @var CandleInterface $candle30to15minutes Предыдущая 15 минутная свечка */
-            $candle30to15minutes = $candles30minutes->slice(14, 15);
-            /** @var string $priceChange Изменение цены */
-            $priceChange = bcdiv($candle15minutes->getClosePrice(), $candles7hours->getHighestPrice(), 2);
-            /*
-            * Открываем позицию если:
-            * - объём торгов увеличился на 30% и более
-            * - цена увеличилась на 2%
-            * - Депозита хватает чтобы купить хотя бы 0.0001 монету(Ограничение API)
-            */
-            $volumeChange = bcdiv($candle15minutes->getVolume(), $candle30to15minutes->getVolume(), 2);
-            $deposit = $this->accountRepository->getDeposit();
-            if (bccomp($volumeChange, "1.3") >= 0 && bccomp($priceChange, '1.02') >= 0 && bcdiv($candle15minutes->getClosePrice(), $deposit) >= '0.0001') {
-                $this->position = $this->createPosition($candle15minutes->getClosePrice());
-                $this->entityManager->persist($this->position);
-                $this->entityManager->flush();
-            }
-        }
-
-        return $this->position;
-    }
-
-    public function waitAndClosePosition(): Position
-    {
-        if ($this->position->isClosed()) {
-            return $this->position;
-        }
-
-        return $this->position;
-    }
-
-    public function hasOpenedPosition(): bool
-    {
-        return (bool)$this->position?->isOpened();
-    }
-
-
-    private function createPosition(string $currentPrice): Position
-    {
         $scale = 2;
         $deposit = $this->accountRepository->getDeposit();
         /** @var string $risk Риск в $ */
         $risk = bcmul('0.01', $deposit, $scale);
         $lastHourCandle = $this->candleRepository->find(symbol: $this->coin->getCode() . 'USDT', interval: '60', limit: 1);
         $stopAtr = bcdiv($lastHourCandle->getHighestPrice(), $lastHourCandle->getLowestPrice(), $scale);
-        $stopPrice = bcdiv($currentPrice, bcmul($stopAtr, '2', $scale), $scale);
+        $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getCode() . 'USDT');
+        $stopPrice = bcdiv($lastTradedPrice, bcmul($stopAtr, '2', $scale), $scale);
         $stopPercent = bcmul(
             bcdiv(
-                bcsub($currentPrice, $stopPrice, $scale),
-                $currentPrice,
+                bcsub($lastTradedPrice, $stopPrice, $scale),
+                $lastTradedPrice,
                 $scale
             ),
             "100",
@@ -116,10 +106,31 @@ class CatchPumpStrategy implements TradingStrategyInterface
             ->setCategory(Order\ByBit\Category::spot)
             ->setType(Order\ByBit\Type::Limit)
             ->setOrderFilter(Order\ByBit\OrderFilter::StopOrder);
+        $this->position = new Position($buyOrder);
+        $this->position->setStopOrder($stopOrder);
+        $this->entityManager->persist($this->position);
+        $this->entityManager->flush();
 
-        $position = new Position($buyOrder);
-        $position->setStopOrder($stopOrder);
+        return $this->position;
+    }
 
-        return $position;
+    public function сlosePosition(): Position
+    {
+        if ($this->position->isClosed()) {
+            return $this->position;
+        }
+
+        return $this->position;
+    }
+
+    public function hasOpenedPosition(): bool
+    {
+        return (bool)$this->position?->isOpened();
+    }
+
+
+    private function createPosition(string $currentPrice): Position
+    {
+
     }
 }

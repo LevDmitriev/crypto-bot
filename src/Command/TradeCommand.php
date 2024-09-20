@@ -37,9 +37,9 @@ class TradeCommand extends Command
         while ($coin && $this->positionRepository->getTotalCount() < 5) {
             $strategy = $this->tradingStrategyFactory->create($input->getOption('strategy'), $coin);
             if (!$strategy->hasOpenedPosition()) {
-                $strategy->waitAndOpenPosition();
+                $strategy->openPosition();
             }
-            $strategy->waitAndClosePosition();
+            $strategy->сlosePosition();
         }
 
         return self::SUCCESS;

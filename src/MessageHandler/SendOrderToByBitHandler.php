@@ -24,7 +24,7 @@ class SendOrderToByBitHandler
     public function __construct(
         private readonly PositionRepository $repository,
         private readonly ByBitApi $byBitApi,
-        #[Autowire(service: 'app.serializer.bybit')]
+        //        #[Autowire(service: 'app.serializer.bybit')]
         private readonly NormalizerInterface $normalizer,
         private readonly MessageBusInterface $messageBus
     ) {

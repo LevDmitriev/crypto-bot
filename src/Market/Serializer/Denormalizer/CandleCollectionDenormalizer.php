@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Serializer\Denormalizer;
+namespace App\Market\Serializer\Denormalizer;
 
 use App\Market\Model\Candle;
 use App\Market\Model\CandleCollection;

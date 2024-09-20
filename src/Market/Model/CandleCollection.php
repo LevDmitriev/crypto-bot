@@ -4,9 +4,6 @@ namespace App\Market\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 
-use function App\TradingStrategy\bcadd;
-use function App\TradingStrategy\bccomp;
-
 /**
  * Коллекция свечей
  * @extends ArrayCollection<int, Candle>
@@ -17,7 +14,7 @@ class CandleCollection extends ArrayCollection implements CandleInterface
     {
         $result = '0';
         foreach ($this as $candle) {
-            $result = bccomp($candle->getHighestPrice(), $result) === 1 ? $candle->getHighestPrice() : $result;
+            $result = \bccomp($candle->getHighestPrice(), $result, 4) === 1 ? $candle->getHighestPrice() : $result;
         }
         return $result;
     }
@@ -39,7 +36,7 @@ class CandleCollection extends ArrayCollection implements CandleInterface
 
     public function getClosePrice(): string
     {
-        // TODO: Implement getClosePrice() method.
+        return $this->last()->getClosePrice();
     }
 
     public function getLowestPrice(): string
@@ -51,7 +48,7 @@ class CandleCollection extends ArrayCollection implements CandleInterface
     {
         $result = '0';
         foreach ($this as $candle) {
-            $result = bcadd($result, $candle->getVolume());
+            $result = \bcadd($result, $candle->getVolume(), 2);
         }
 
         return $result;

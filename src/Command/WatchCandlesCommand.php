@@ -23,7 +23,7 @@ use WebSocket\Message\Text;
 class WatchCandlesCommand extends Command
 {
     public function __construct(
-        #[Autowire(service: 'app.serializer.bybit')]
+        //        #[Autowire(service: 'app.serializer.bybit')]
         private readonly DenormalizerInterface $denormalizer,
         private readonly TradingStrategyFactoryInterface $tradingStrategyFactory,
     ) {

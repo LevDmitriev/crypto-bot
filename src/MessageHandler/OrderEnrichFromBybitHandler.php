@@ -28,7 +28,7 @@ class OrderEnrichFromBybitHandler
         private readonly ByBitApi $byBitApi,
         private readonly EntityManagerInterface $entityManager,
         private readonly MessageBusInterface $messageBus,
-        #[Autowire(service:'app.serializer.bybit')]
+        //        #[Autowire(service:'app.serializer.bybit')]
         private readonly DenormalizerInterface $denormalizer
     ) {
     }
