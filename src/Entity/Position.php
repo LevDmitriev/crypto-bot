@@ -2,21 +2,21 @@
 
 namespace App\Entity;
 
-use App\Entity\Order\ByBit\Status as ByBitStatus;
-use App\Entity\Position\Status;
+use App\Entity\Order\ByBit\Side;
 use App\Repository\PositionRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
 
 #[ORM\Table(name: 'positions')]
 #[ORM\Entity(repositoryClass: PositionRepository::class)]
 class Position
 {
-    public function __construct(Order $buyOrder)
+    use TimestampableEntity;
+    public function __construct()
     {
-        // Позиция может быть создана только на полностью выполненном приказе на покупку
-        assert($buyOrder->getByBitStatus() === ByBitStatus::Filled);
-        $this->buyOrder = $buyOrder;
-        $this->coin = $buyOrder->getCoin();
+        $this->orders = new ArrayCollection();
     }
 
     #[ORM\Id]
@@ -24,45 +24,22 @@ class Position
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
-    private Order $buyOrder;
-
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
-    private Order $stopOrder;
-
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
-    private ?Order $sellOrder = null;
-
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $status = null;
+
+    /**
+     * @var Collection<int, Order>
+     */
+    #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'position', orphanRemoval: true)]
+    private Collection $orders;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Coin $coin = null;
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getBuyOrder(): Order
-    {
-        return $this->buyOrder;
-    }
-
-    public function setBuyOrder(Order $buyOrder): static
-    {
-        $this->buyOrder = $buyOrder;
-
-        return $this;
-    }
-
-    public function getSellOrder(): ?Order
-    {
-        return $this->sellOrder;
-    }
-
-    public function setSellOrder(?Order $sellOrder): static
-    {
-        $this->sellOrder = $sellOrder;
-
-        return $this;
     }
 
     public function getStatus(): ?string
@@ -82,23 +59,50 @@ class Position
         return $this->getBuyOrder()->getCoin();
     }
 
-    public function isOpened(): bool
+    /**
+     * Получить сруднюю цену позиции
+     * @return string
+     */
+    public function getAveragePrice(): string
     {
-        return $this->getSellOrder()?->getStatus() !== Status::Closed && $this->getStopOrder()?->getStatus() !== Status::Closed;
+        // todo когда будет массив больше 1 - переделать
+        return $this->orders->findFirst(fn (Order $order) => $order->getSide() === Side::Buy)->getAveragePrice();
     }
 
-    public function isClosed(): bool
+    /**
+     * @return Collection<int, Order>
+     */
+    public function getOrders(): Collection
     {
-        return $this->getSellOrder()?->getStatus() == Status::Closed || $this->getStopOrder()?->getStatus() == Status::Closed;
+        return $this->orders;
     }
 
-    public function getStopOrder(): Order
+    public function addOrder(Order $order): static
     {
-        return $this->stopOrder;
+        if (!$this->orders->contains($order)) {
+            $this->orders->add($order);
+            $order->setPosition($this);
+        }
+
+        return $this;
     }
 
-    public function setStopOrder(Order $stopOrder): void
+    public function removeOrder(Order $order): static
     {
-        $this->stopOrder = $stopOrder;
+        if ($this->orders->removeElement($order)) {
+            // set the owning side to null (unless already changed)
+            if ($order->getPosition() === $this) {
+                $order->setPosition(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function setCoin(?Coin $coin): static
+    {
+        $this->coin = $coin;
+
+        return $this;
     }
 }

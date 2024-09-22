@@ -5,21 +5,25 @@ namespace App\Tests\TradingStrategy;
 use App\Account\Model\WalletBalance;
 use App\Entity\Coin;
 use App\Entity\Order;
+use App\Entity\Order\ByBit\Type;
 use App\Entity\Position;
+use App\Factory\OrderFactory;
 use App\Market\Model\Candle;
 use App\Market\Model\CandleCollection;
-use App\Market\Repository\CandleRepository;
 use App\Market\Repository\CandleRepositoryInterface;
 use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
-use App\TradingStrategy\CatchPumpStrategy;
+use App\TradingStrategy\CatchPump\CatchPumpStrategy;
+use App\TradingStrategy\CatchPump\Event\PriceIncreased12OrMore;
+use App\TradingStrategy\CatchPump\Event\PriceIncreased8OrMore;
 use Doctrine\ORM\EntityManagerInterface;
-use PHPUnit\Framework\TestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @coversDefaultClass \App\TradingStrategy\CatchPumpStrategy
+ * @coversDefaultClass \App\TradingStrategy\CatchPump\CatchPumpStrategy
  */
-class CatchPumpStrategyTest extends TestCase
+class CatchPumpStrategyTest extends KernelTestCase
 {
 
     /**
@@ -66,6 +70,7 @@ class CatchPumpStrategyTest extends TestCase
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $positionRepository = $this->createMock(PositionRepository::class);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $candleRepository->method('find')->willReturn($candleCollection);
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn(new WalletBalance(
@@ -73,11 +78,13 @@ class CatchPumpStrategyTest extends TestCase
             totalAvailableBalance: '300'
         ));
         $strategy = new CatchPumpStrategy(
-            coin: $coin,
-            entityManager: $entityManager,
-            candleRepository: $candleRepository,
+            coin:               $coin,
+            entityManager:      $entityManager,
+            candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
-            accountRepository: $accountRepository
+            accountRepository:  $accountRepository,
+            dispatcher:         $dispatcher,
+            orderFactory:       new OrderFactory()
         );
         self::assertTrue($strategy->canOpenPosition());
     }
@@ -132,12 +139,15 @@ class CatchPumpStrategyTest extends TestCase
             totalWalletBallance: '1000',
             totalAvailableBalance: '300'
         ));
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $strategy = new CatchPumpStrategy(
-            coin: $coin,
-            entityManager: $entityManager,
-            candleRepository: $candleRepository,
+            coin:               $coin,
+            entityManager:      $entityManager,
+            candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
-            accountRepository: $accountRepository
+            accountRepository:  $accountRepository,
+            dispatcher:         $dispatcher,
+            orderFactory:       new OrderFactory()
         );
         self::assertFalse($strategy->canOpenPosition());
     }
@@ -192,12 +202,15 @@ class CatchPumpStrategyTest extends TestCase
             totalWalletBallance: '1000',
             totalAvailableBalance: '0'
         ));
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $strategy = new CatchPumpStrategy(
-            coin: $coin,
-            entityManager: $entityManager,
-            candleRepository: $candleRepository,
+            coin:               $coin,
+            entityManager:      $entityManager,
+            candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
-            accountRepository: $accountRepository
+            accountRepository:  $accountRepository,
+            dispatcher:         $dispatcher,
+            orderFactory:       new OrderFactory()
         );
         self::assertFalse($strategy->canOpenPosition());
     }
@@ -253,12 +266,15 @@ class CatchPumpStrategyTest extends TestCase
             totalWalletBallance: '1000',
             totalAvailableBalance: '300'
         ));
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $strategy = new CatchPumpStrategy(
-            coin: $coin,
-            entityManager: $entityManager,
-            candleRepository: $candleRepository,
+            coin:               $coin,
+            entityManager:      $entityManager,
+            candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
-            accountRepository: $accountRepository
+            accountRepository:  $accountRepository,
+            dispatcher:         $dispatcher,
+            orderFactory:       new OrderFactory()
         );
         self::assertFalse($strategy->canOpenPosition());
     }
@@ -313,12 +329,15 @@ class CatchPumpStrategyTest extends TestCase
             totalWalletBallance: '1000',
             totalAvailableBalance: '300'
         ));
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $strategy = new CatchPumpStrategy(
-            coin: $coin,
-            entityManager: $entityManager,
-            candleRepository: $candleRepository,
+            coin:               $coin,
+            entityManager:      $entityManager,
+            candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
-            accountRepository: $accountRepository
+            accountRepository:  $accountRepository,
+            dispatcher:         $dispatcher,
+            orderFactory:       new OrderFactory()
         );
         self::assertFalse($strategy->canOpenPosition());
     }
@@ -349,25 +368,98 @@ class CatchPumpStrategyTest extends TestCase
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
         $candleRepository->method('find')->willReturn($candleCollection);
         $accountRepository = $this->createMock(AccountRepository::class);
-
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $strategy = new CatchPumpStrategy(
-            coin: $coin,
-            entityManager: $entityManager,
-            candleRepository: $candleRepository,
+            coin:               $coin,
+            entityManager:      $entityManager,
+            candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
-            accountRepository: $accountRepository,
-            position: $this->createMock(Position::class)
+            accountRepository:  $accountRepository,
+            dispatcher:         $dispatcher,
+            orderFactory:       new OrderFactory(),
+            position:           $this->createMock(Position::class)
         );
         self::assertFalse($strategy->canOpenPosition());
     }
 
-    public function testWaitAndClosePosition()
+    /**
+     * @return void
+     * @covers ::sell50Percent
+     */
+    public function testSell50Percent(): void
     {
-
+        $orderFactory = new OrderFactory();
+        $coin = new Coin();
+        $coin->setCode('BTC');
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $positionRepository = $this->createMock(PositionRepository::class);
+        $candleRepository = $this->createMock(CandleRepositoryInterface::class);
+        $accountRepository = $this->createMock(AccountRepository::class);
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $buyOrder = new Order();
+        $buyOrder->setCoin($coin)
+            ->setQuantity('2')
+            ->setSide(Order\ByBit\Side::Buy)
+        ;
+        $position = new Position();
+        $position->setCoin($coin);
+        $position->addOrder($buyOrder);
+        $strategy = new CatchPumpStrategy(
+            coin:               $coin,
+            entityManager:      $entityManager,
+            candleRepository:   $candleRepository,
+            positionRepository: $positionRepository,
+            accountRepository:  $accountRepository,
+            dispatcher:         $dispatcher,
+            orderFactory: $orderFactory,
+            position:           $position
+        );
+        $entityManager->expects(self::once())->method('persist')->with($position);
+        $entityManager->expects(self::once())->method('flush');
+        $strategy->sell50Percent(new PriceIncreased8OrMore());
+        $order = $position->getOrders()->last();
+        self::assertEquals('1.0000', $order->getQuantity());
+        self::assertEquals($coin, $order->getCoin());
+        self::assertEquals(Type::Market, $order->getType());
     }
-
-    public function testHasOpenedPosition()
+    /**
+     * @return void
+     * @covers ::sell25Percent
+     */
+    public function testSell25Percent(): void
     {
-
+        $orderFactory = new OrderFactory();
+        $coin = new Coin();
+        $coin->setCode('BTC');
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $positionRepository = $this->createMock(PositionRepository::class);
+        $candleRepository = $this->createMock(CandleRepositoryInterface::class);
+        $accountRepository = $this->createMock(AccountRepository::class);
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $buyOrder = new Order();
+        $buyOrder->setCoin($coin)
+            ->setQuantity('4')
+            ->setSide(Order\ByBit\Side::Buy)
+        ;
+        $position = new Position();
+        $position->setCoin($coin);
+        $position->addOrder($buyOrder);
+        $strategy = new CatchPumpStrategy(
+            coin:               $coin,
+            entityManager:      $entityManager,
+            candleRepository:   $candleRepository,
+            positionRepository: $positionRepository,
+            accountRepository:  $accountRepository,
+            dispatcher:         $dispatcher,
+            orderFactory: $orderFactory,
+            position:           $position
+        );
+        $entityManager->expects(self::once())->method('persist')->with($position);
+        $entityManager->expects(self::once())->method('flush');
+        $strategy->sell25Percent(new PriceIncreased12OrMore());
+        $order = $position->getOrders()->last();
+        self::assertEquals('1.0000', $order->getQuantity());
+        self::assertEquals($coin, $order->getCoin());
+        self::assertEquals(Type::Market, $order->getType());
     }
 }

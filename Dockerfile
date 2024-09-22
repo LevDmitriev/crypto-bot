@@ -34,6 +34,7 @@ RUN set -eux; \
 		pdo_pgsql \
 		amqp \
     	bcmath \
+    	trader \
 	;
 
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser

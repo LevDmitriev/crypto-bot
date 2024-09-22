@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\TradingStrategy;
 
 use App\Entity\Coin;
-use App\Repository\CoinRepository;
 use App\Repository\PositionRepository;
+use App\TradingStrategy\CatchPump\CatchPumpStrategy;
 use ByBit\SDK\ByBitApi;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
 /**

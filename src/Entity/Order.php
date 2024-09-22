@@ -9,6 +9,7 @@ use App\Entity\Order\ByBit\Side;
 use App\Entity\Order\ByBit\Type;
 use App\Entity\Order\Status;
 use App\Repository\PositionRepository;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -17,6 +18,7 @@ use Symfony\Bridge\Doctrine\Types\UuidType;
 #[ORM\Table(name: 'orders')]
 class Order
 {
+    use TimestampableEntity;
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
@@ -24,7 +26,7 @@ class Order
     private ?string $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?float $quantity = null;
+    private ?string $quantity = null;
 
     /**
      * Цена
@@ -69,8 +71,8 @@ class Order
     #[ORM\Column(enumType: ByBitStatus::class, options: ['default' => ByBitStatus::New])]
     private ByBitStatus $byBitStatus = ByBitStatus::New;
 
-    #[ORM\Column(nullable: true)]
-    private string $status;
+    #[ORM\Column(enumType: Status::class, options: ['default' => Status::New])]
+    private Status $status;
 
     /**
      * Средняя цена выполнения
@@ -93,17 +95,21 @@ class Order
     #[ORM\Column(nullable: true)]
     private float $cumulativeExecutedValue;
 
+    #[ORM\ManyToOne(inversedBy: 'orders')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Position $position = null;
+
     public function getId(): ?string
     {
         return $this->id;
     }
 
-    public function getQuantity(): ?float
+    public function getQuantity(): ?string
     {
         return $this->quantity;
     }
 
-    public function setQuantity(float $quantity): static
+    public function setQuantity(string $quantity): static
     {
         $this->quantity = $quantity;
 
@@ -115,7 +121,7 @@ class Order
         return $this->price;
     }
 
-    public function setPrice(string $price): static
+    public function setPrice(?string $price): static
     {
         $this->price = $price;
 
@@ -183,17 +189,17 @@ class Order
     }
 
     /**
-     * @return string
+     * @return Status
      */
-    public function getStatus(): string
+    public function getStatus(): Status
     {
         return $this->status;
     }
 
     /**
-     * @param string $status
+     * @param Status $status
      */
-    public function setStatus(string $status): void
+    public function setStatus(Status $status): void
     {
         $this->status = $status;
     }
@@ -280,5 +286,17 @@ class Order
     public function setOrderFilter(OrderFilter $orderFilter): self
     {
         $this->orderFilter = $orderFilter;
+    }
+
+    public function getPosition(): ?Position
+    {
+        return $this->position;
+    }
+
+    public function setPosition(?Position $position): static
+    {
+        $this->position = $position;
+
+        return $this;
     }
 }

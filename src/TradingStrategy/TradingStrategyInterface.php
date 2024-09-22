@@ -10,26 +10,8 @@ use App\Entity\Position;
 interface TradingStrategyInterface
 {
     /**
-     * Открыть позицию
-     * @return Position
+     * Проанализировать данные и отстрелить все необходимые события.
+     * @return void
      */
-    public function openPosition(): Position;
-
-    /**
-     * Можно открывать позицию
-     * @return bool
-     */
-    public function canOpenPosition(): bool;
-
-    /**
-     * Закрыть позицию
-     * @return Position
-     */
-    public function сlosePosition(): Position;
-
-    /**
-     * Есть ли уже открытая позиция?
-     * @return bool
-     */
-    public function hasOpenedPosition(): bool;
+    public function dispatchEvents(): void;
 }
