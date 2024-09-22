@@ -2,13 +2,21 @@ framework:
     messenger:
         # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
         # failure_transport: failed
-
+        default_bus: command.bus
+        buses:
+            command.bus:
+                middleware:
+                    - doctrine_transaction
         transports:
             # https://symfony.com/doc/current/messenger.html#transport-configuration
 #             async: '%env(MESSENGER_TRANSPORT_DSN)%'
             # failed: 'doctrine://default?queue_name=failed'
-             sync: 'sync://'
+             sync:
+                dsn: 'sync://'
+                retry_strategy:
+                    delay: 5000
              in-memory: 'in-memory://'
+             async: '%env(MESSENGER_TRANSPORT_DSN)%'
              orders_created:
                  dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                  options:
@@ -28,10 +36,9 @@ framework:
              
 
         routing:
-            App\Messages\OrderEnrichFromByBitMessage: orders_enrich_from_bybit
-            App\Messages\OrderCreatedMessage: orders_created
-            App\Messages\PositionCreatedMessage: in-memory
-
+            App\Messages\CreateOrderToPositionCommand: async
+            App\MessageHandler\SendOrderToByBitHandler: sync
+            App\Messages\EnrichOrderFromByBitCommand: sync
 # when@test:
 #    framework:
 #        messenger:

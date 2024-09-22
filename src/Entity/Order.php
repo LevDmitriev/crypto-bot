@@ -72,14 +72,14 @@ class Order
     private ByBitStatus $byBitStatus = ByBitStatus::New;
 
     #[ORM\Column(enumType: Status::class, options: ['default' => Status::New])]
-    private Status $status;
+    private Status $status = Status::New;
 
     /**
      * Средняя цена выполнения
-     * @var float
+     * @var string
      */
     #[ORM\Column(nullable: true)]
-    private float $averagePrice;
+    private string $averagePrice;
 
     /**
      * Итоговое купленное количество
@@ -90,10 +90,10 @@ class Order
 
     /**
      * Итоговая стоимость покупки
-     * @var float
+     * @var string
      */
     #[ORM\Column(nullable: true)]
-    private float $cumulativeExecutedValue;
+    private string $cumulativeExecutedValue;
 
     #[ORM\ManyToOne(inversedBy: 'orders')]
     #[ORM\JoinColumn(nullable: false)]
@@ -109,7 +109,7 @@ class Order
         return $this->quantity;
     }
 
-    public function setQuantity(string $quantity): static
+    public function setQuantity(?string $quantity): static
     {
         $this->quantity = $quantity;
 
@@ -205,17 +205,17 @@ class Order
     }
 
     /**
-     * @return float
+     * @return string
      */
-    public function getAveragePrice(): float
+    public function getAveragePrice(): string
     {
         return $this->averagePrice;
     }
 
     /**
-     * @param float $averagePrice
+     * @param string $averagePrice
      */
-    public function setAveragePrice(float $averagePrice): void
+    public function setAveragePrice(string $averagePrice): void
     {
         $this->averagePrice = $averagePrice;
     }
@@ -245,9 +245,9 @@ class Order
     }
 
     /**
-     * @param float $cumulativeExecutedValue
+     * @param string $cumulativeExecutedValue
      */
-    public function setCumulativeExecutedValue(float $cumulativeExecutedValue): void
+    public function setCumulativeExecutedValue(string $cumulativeExecutedValue): void
     {
         $this->cumulativeExecutedValue = $cumulativeExecutedValue;
     }
@@ -276,6 +276,8 @@ class Order
     public function setTriggerPrice(?string $triggerPrice): self
     {
         $this->triggerPrice = $triggerPrice;
+
+        return $this;
     }
 
     public function getOrderFilter(): OrderFilter
@@ -286,6 +288,8 @@ class Order
     public function setOrderFilter(OrderFilter $orderFilter): self
     {
         $this->orderFilter = $orderFilter;
+
+        return $this;
     }
 
     public function getPosition(): ?Position

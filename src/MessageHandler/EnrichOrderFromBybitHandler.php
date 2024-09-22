@@ -6,34 +6,31 @@ namespace App\MessageHandler;
 
 use App\Entity\Order;
 use App\Entity\Order\ByBit\Status as ByBitStatus;
-use App\Messages\OrderEnrichFromByBitMessage;
+use App\Messages\EnrichOrderFromByBitCommand;
 use App\Repository\PositionRepository;
 use ByBit\SDK\ByBitApi;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\DelayStamp;
+use Symfony\Component\Messenger\Exception\RecoverableMessageHandlingException;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Обработчик проставления статуса приказу
  */
 #[AsMessageHandler]
-class OrderEnrichFromBybitHandler
+class EnrichOrderFromBybitHandler
 {
     public function __construct(
         private readonly PositionRepository $repository,
         private readonly ByBitApi $byBitApi,
         private readonly EntityManagerInterface $entityManager,
-        private readonly MessageBusInterface $messageBus,
         //        #[Autowire(service:'app.serializer.bybit')]
         private readonly DenormalizerInterface $denormalizer
     ) {
     }
 
-    public function __invoke(OrderEnrichFromByBitMessage $message)
+    public function __invoke(EnrichOrderFromByBitCommand $message)
     {
         /** @var Order|null $order */
         $order = $this->repository->find($message->id);
@@ -43,10 +40,9 @@ class OrderEnrichFromBybitHandler
             if (isset($orderFromApi['orderStatus']) && ByBitStatus::isClosedStatus(ByBitStatus::from($orderFromApi['orderStatus']))) {
                 $order = $this->denormalizer->denormalize($orderFromApi, Order::class, '[]', [AbstractNormalizer::OBJECT_TO_POPULATE => $order]);
                 $this->entityManager->persist($order);
-                $this->entityManager->flush();
                 return;
             }
         }
-        $this->messageBus->dispatch($message, [new DelayStamp(5000)]);
+        throw new RecoverableMessageHandlingException("Ждём когда приказ будет выполнен");
     }
 }

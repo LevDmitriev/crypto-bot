@@ -7,7 +7,7 @@ namespace App\Messages;
 /**
  * Сообщение о том, что создан приказ с ID приказа
  */
-class OrderCreatedMessage
+class SendOrderToByBitCommand
 {
     public function __construct(public string $id)
     {

@@ -7,20 +7,15 @@ framework:
                 property: 'status'
             supports:
                 - App\Entity\Position
-            initial_marking: BuyOrderFullFilled
+            initial_marking: New
             places:
-                BuyOrderFullFilled:
-                    name: Создан приказ на покупку
-                SellOrderCreated:
-                    name: Создан приказ на продажу
+                New:
+                    name: Новая
                 Closed:
                     name: Закрыта
             transitions:
-                to_sell_order_created:
-                    from: [BuyOrderFullFilled]
-                    to: SellOrderCreated
                 close:
-                    from: [BuyOrderFullFilled, SellOrderCreated]
+                    from: [New]
                     to: Closed
         order:
             type: 'state_machine'

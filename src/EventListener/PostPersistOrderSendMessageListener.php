@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\EventListener;
 
 use App\Entity\Order;
-use App\Messages\OrderCreatedMessage;
-use App\Messages\OrderEnrichFromByBitMessage;
+use App\Messages\SendOrderToByBitCommand;
+use App\Messages\EnrichOrderFromByBitCommand;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\Events;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -29,8 +29,7 @@ class PostPersistOrderSendMessageListener
     {
         $id = $order->getId();
         if ($id) {
-            $message = new OrderCreatedMessage($id);
-            $this->messageBus->dispatch($message);
+            $this->messageBus->dispatch(new SendOrderToByBitCommand($id));
         }
     }
 }

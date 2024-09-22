@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace App\MessageHandler;
 
 use App\Entity\Order;
-use App\Messages\OrderCreatedMessage;
+use App\Messages\SendOrderToByBitCommand;
 use App\Messages\OrderMessage;
-use App\Messages\OrderEnrichFromByBitMessage;
+use App\Messages\EnrichOrderFromByBitCommand;
 use App\Repository\PositionRepository;
 use ByBit\SDK\ByBitApi;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Messenger\Exception\RecoverableMessageHandlingException;
+use Symfony\Component\Messenger\Message\RedispatchMessage;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -19,18 +21,18 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  * Обработчик проставления статуса приказу
  */
 #[AsMessageHandler]
-class SendOrderToByBitHandler
+readonly class SendOrderToByBitHandler
 {
     public function __construct(
-        private readonly PositionRepository $repository,
-        private readonly ByBitApi $byBitApi,
+        private PositionRepository $repository,
+        private ByBitApi $byBitApi,
         //        #[Autowire(service: 'app.serializer.bybit')]
-        private readonly NormalizerInterface $normalizer,
-        private readonly MessageBusInterface $messageBus
+        private NormalizerInterface $normalizer,
+        private MessageBusInterface $messageBus
     ) {
     }
 
-    public function __invoke(OrderCreatedMessage $message)
+    public function __invoke(SendOrderToByBitCommand $message)
     {
         /** @var Order|null $order */
         $order = $this->repository->find($message->id);
@@ -38,9 +40,9 @@ class SendOrderToByBitHandler
             $orderArray = $this->normalizer->normalize($order, '[]');
             $response = $this->byBitApi->tradeApi()->placeOrder($orderArray);
             if (isset($response['orderLinkId'])) {
-                $this->messageBus->dispatch(new OrderEnrichFromByBitMessage($message->id));
+                $this->messageBus->dispatch(new EnrichOrderFromByBitCommand($message->id));
             } else {
-                $this->messageBus->dispatch($message);
+                $this->messageBus->dispatch(new RedispatchMessage($message));
             }
         }
     }

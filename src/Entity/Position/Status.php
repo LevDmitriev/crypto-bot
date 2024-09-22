@@ -9,7 +9,7 @@ namespace App\Entity\Position;
  */
 enum Status: string
 {
+    case New = 'New';
     case BuyOrderFullFilled = 'BuyOrderFullFilled';
-    case SellOrderCreated = 'SellOrderCreated';
     case Closed = 'Closed';
 }

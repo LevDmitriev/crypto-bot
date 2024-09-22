@@ -12,6 +12,7 @@ class CandleCollection extends ArrayCollection implements CandleInterface
 {
     public function getHighestPrice(): string
     {
+        assert($this->count());
         $result = '0';
         foreach ($this as $candle) {
             $result = \bccomp($candle->getHighestPrice(), $result, 4) === 1 ? $candle->getHighestPrice() : $result;
@@ -41,7 +42,12 @@ class CandleCollection extends ArrayCollection implements CandleInterface
 
     public function getLowestPrice(): string
     {
-        // TODO: Implement getLowestPrice() method.
+        assert($this->count());
+        $result = '0';
+        foreach ($this as $candle) {
+            $result = \bccomp($candle->getLowestPrice(), $result, 4) === 1 ? $candle->getLowestPrice() : $result;
+        }
+        return $result;
     }
 
     public function getVolume(): string

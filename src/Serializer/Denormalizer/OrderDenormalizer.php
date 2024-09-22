@@ -24,7 +24,7 @@ class OrderDenormalizer implements \Symfony\Component\Serializer\Normalizer\Deno
             $order->setTriggerPrice($data['triggerPrice']);
         }
         if ($data['avgPrice']) {
-            $order->setAveragePrice((float) $data['avgPrice']);
+            $order->setAveragePrice($data['avgPrice']);
             if ($data['cumExecQty']) {
                 $order->setCumulativeExecutedValue(bcmul($data['avgPrice'], $data['cumExecQty'], 2));
             }

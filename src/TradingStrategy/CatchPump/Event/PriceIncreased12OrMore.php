@@ -2,6 +2,7 @@
 
 namespace App\TradingStrategy\CatchPump\Event;
 
+use App\Entity\Position;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**
@@ -9,4 +10,9 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 class PriceIncreased12OrMore extends Event
 {
+    public function __construct(public readonly Position $position)
+    {
+    }
+
+    public const NAME = 'trading_strategy.catch_pump.price_increased_12_or_more';
 }

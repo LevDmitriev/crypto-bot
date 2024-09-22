@@ -17,6 +17,16 @@ class PositionRepository extends ServiceEntityRepository
         parent::__construct($registry, Position::class);
     }
 
+    public function getTotalNotClosedCount(): int
+    {
+        return $this->createQueryBuilder('p')
+            ->select('COUNT(p)')
+            ->where('status != :status')
+            ->setParameter('status', Position\Status::Closed)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function getTotalCount(): int
     {
         return $this->createQueryBuilder('p')
@@ -25,12 +35,15 @@ class PositionRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    public function findOneByCoin(Coin $coin): ?Position
+
+    public function findOneNotClosedByCoin(Coin $coin): ?Position
     {
         return $this->createQueryBuilder('p')
             ->leftJoin('p.buyOrder', 'buyOrder')
             ->where('buyOrder.coin = :coin')
+            ->where('status != :status')
             ->setParameter('coin', $coin)
+            ->setParameter('status', Position\Status::Closed)
             ->getQuery()
             ->getOneOrNullResult();
     }

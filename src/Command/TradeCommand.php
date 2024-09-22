@@ -34,7 +34,7 @@ class TradeCommand extends Command
     {
         $coin = $input->getOption('coin');
         $coin = $this->coinRepository->findOneBy(['code' => $coin]);
-        while ($coin && $this->positionRepository->getTotalCount() < 5) {
+        while ($coin && $this->positionRepository->getTotalNotClosedCount() < 5) {
             $strategy = $this->tradingStrategyFactory->create($input->getOption('strategy'), $coin);
             if (!$strategy->hasOpenedPosition()) {
                 $strategy->openPosition();
