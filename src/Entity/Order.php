@@ -20,10 +20,12 @@ class Order
 {
     use TimestampableEntity;
     #[ORM\Id]
-    #[ORM\Column(type: UuidType::NAME, unique: true)]
-    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
-    #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
-    private ?string $id = null;
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    //#[ORM\Column(type: UuidType::NAME, unique: true)]
+    //#[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    //#[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    private ?int $id = null;
 
     #[ORM\Column(length: 255)]
     private ?string $quantity = null;
@@ -71,8 +73,8 @@ class Order
     #[ORM\Column(enumType: ByBitStatus::class, options: ['default' => ByBitStatus::New])]
     private ByBitStatus $byBitStatus = ByBitStatus::New;
 
-    #[ORM\Column(enumType: Status::class, options: ['default' => Status::New])]
-    private Status $status = Status::New;
+    #[ORM\Column]
+    private string $status = "New";
 
     /**
      * Средняя цена выполнения
@@ -99,7 +101,7 @@ class Order
     #[ORM\JoinColumn(nullable: false)]
     private ?Position $position = null;
 
-    public function getId(): ?string
+    public function getId(): ?int
     {
         return $this->id;
     }
@@ -189,17 +191,17 @@ class Order
     }
 
     /**
-     * @return Status
+     * @return string
      */
-    public function getStatus(): Status
+    public function getStatus(): string
     {
         return $this->status;
     }
 
     /**
-     * @param Status $status
+     * @param string $status
      */
-    public function setStatus(Status $status): void
+    public function setStatus(string $status): void
     {
         $this->status = $status;
     }

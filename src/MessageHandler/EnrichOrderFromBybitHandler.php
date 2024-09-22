@@ -7,6 +7,7 @@ namespace App\MessageHandler;
 use App\Entity\Order;
 use App\Entity\Order\ByBit\Status as ByBitStatus;
 use App\Messages\EnrichOrderFromByBitCommand;
+use App\Repository\OrderRepository;
 use App\Repository\PositionRepository;
 use ByBit\SDK\ByBitApi;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,7 +23,7 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 class EnrichOrderFromBybitHandler
 {
     public function __construct(
-        private readonly PositionRepository $repository,
+        private readonly OrderRepository $orderRepository,
         private readonly ByBitApi $byBitApi,
         private readonly EntityManagerInterface $entityManager,
         //        #[Autowire(service:'app.serializer.bybit')]
@@ -33,7 +34,7 @@ class EnrichOrderFromBybitHandler
     public function __invoke(EnrichOrderFromByBitCommand $message)
     {
         /** @var Order|null $order */
-        $order = $this->repository->find($message->id);
+        $order = $this->orderRepository->find($message->id);
         if ($order && $order->getByBitStatus() === ByBitStatus::New) {
             $orderFromApi = $this->byBitApi->tradeApi()->getOpenOrders(['orderLinkId' => $message->id, 'category' => 'spot']);
             $orderFromApi = isset($orderFromApi['list'][0]) ? $orderFromApi['list'][0] : $orderFromApi;

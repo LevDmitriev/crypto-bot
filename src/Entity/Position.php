@@ -30,7 +30,7 @@ class Position
     /**
      * @var Collection<int, Order>
      */
-    #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'position', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'position', cascade: ['persist'], orphanRemoval: true)]
     private Collection $orders;
 
     #[ORM\ManyToOne]

@@ -26,6 +26,8 @@ class TestCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->sellAllBitCoins();
+        return self::SUCCESS;
         $orderLinkId = time() . "-11-09-2024";
         $price = $this->getBitCoinCurrentPrice();
         //        $this->sellAllBitCoins();

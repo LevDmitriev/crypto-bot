@@ -8,10 +8,12 @@ use App\Repository\CoinRepository;
 use App\Repository\OrderRepository;
 use App\Repository\PositionRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 /**
  * Обработчик комманды на создание приказа для позиции
  */
+#[AsMessageHandler]
 readonly class CreateOrderToPositionCommandHandler
 {
     public function __construct(

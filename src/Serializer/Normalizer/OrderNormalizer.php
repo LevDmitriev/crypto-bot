@@ -23,13 +23,13 @@ class OrderNormalizer implements NormalizerInterface
         assert($object instanceof Order);
 
         return [
-            'orderLinkId' => $object->getId(),
+            'orderLinkId' => (string) $object->getId(),
             'category' => $object->getCategory()->value,
             'orderFilter' => $object->getOrderFilter()->value,
             'symbol' => $object->getSymbol(),
             'side' => $object->getSide()->value,
             'orderType' => $object->getType()->value,
-            'qty' => $object->getType() === Order\ByBit\Type::Limit ? (string) $object->getQuantity() : (string) $object->getPrice(),
+            'qty' => (string) $object->getQuantity(),
             'price' => $object->getType() === Order\ByBit\Type::Limit ? (string) $object->getPrice() : null,
         ];
     }

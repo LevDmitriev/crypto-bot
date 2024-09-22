@@ -96,7 +96,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $scale = 2;
         $walletBalance = $this->accountRepository->getWalletBalance();
         /** @var string $risk Риск в $ */
-        $risk = bcmul('0.01', $walletBalance->totalAvailableBalance, $scale);
+        $risk = bcmul('0.01', $walletBalance->totalWalletBallance, $scale);
         $lastHourCandle = $this->candleRepository->find(symbol: $this->coin->getCode() . 'USDT', interval: '60', limit: 1);
         $stopAtr = bcsub($lastHourCandle->getHighestPrice(), $lastHourCandle->getLowestPrice(), $scale);
         $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getCode() . 'USDT');
@@ -120,7 +120,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $entityManager->persist($position);
         });
         $this->logger?->debug("Открыта позиция c ID {$position->getId()} на $quantity USDT");
-        if ($buyOrder->getStatus() === Status::Filled) {
+        if ($buyOrder->getStatus() === Status::Filled->value) {
             $this->commandBus->dispatch(
                 new CreateOrderToPositionCommand(
                     positionId:   $position->getId(),
@@ -190,7 +190,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         }
         $allPositions = $this->positionRepository->findAll();
         foreach ($allPositions as $position) {
-            if ($position?->getOrders()->first()?->getStatus() === Status::Filled) {
+            if ($position?->getOrders()->first()?->getStatus() === Status::Filled->value) {
                 $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getCode() . 'USDT');
                 $averagePrice = $position->getAveragePrice();
                 $priceChange = bcdiv($lastTradedPrice, $averagePrice, 2);

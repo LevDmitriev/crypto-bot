@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Messages;
 
 /**
- * Комманда с ID приказа на проставление статуса
+ * Команда на обновление приказа данными из ByBit
  */
 class EnrichOrderFromByBitCommand
 {

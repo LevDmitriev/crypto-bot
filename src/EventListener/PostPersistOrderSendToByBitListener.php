@@ -37,11 +37,7 @@ class PostPersistOrderSendToByBitListener
         if ($order && $order->getByBitStatus() === Order\ByBit\Status::New) {
             $orderArray = $this->normalizer->normalize($order, '[]');
             $response = $this->byBitApi->tradeApi()->placeOrder($orderArray);
-            if (isset($response['orderLinkId'])) {
-                $this->messageBus->dispatch(new EnrichOrderFromByBitCommand($order->getId()));
-            } else {
-                throw new \RuntimeException('Ошибка отправки в ByBit ' . json_encode($response));
-            }
+            $this->messageBus->dispatch(new EnrichOrderFromByBitCommand($response['orderLinkId']));
         }
     }
 }

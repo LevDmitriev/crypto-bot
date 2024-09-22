@@ -14,7 +14,6 @@ use App\Market\Repository\CandleRepositoryInterface;
 use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
 use App\TradingStrategy\CatchPump\CatchPumpStrategy;
-use App\TradingStrategy\CatchPump\Event\PositionCanBeOpenedEvent;
 use App\TradingStrategy\CatchPump\Event\PriceIncreased12OrMore;
 use App\TradingStrategy\CatchPump\Event\PriceIncreased8OrMore;
 use Doctrine\ORM\EntityManagerInterface;
@@ -504,7 +503,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             turnover: '1'
         );
         $candleRepository->method('find')->willReturn(new CandleCollection([$candle]));
-        $walletBalance = new WalletBalance('500', '1000');
+        $walletBalance = new WalletBalance('1000', '500');
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn($walletBalance);
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
