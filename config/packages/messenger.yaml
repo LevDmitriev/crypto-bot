@@ -37,7 +37,6 @@ framework:
 
         routing:
             App\Messages\CreateOrderToPositionCommand: async
-            App\MessageHandler\SendOrderToByBitHandler: sync
             App\Messages\EnrichOrderFromByBitCommand: sync
 # when@test:
 #    framework:

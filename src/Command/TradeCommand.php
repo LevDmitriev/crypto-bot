@@ -20,13 +20,12 @@ class TradeCommand extends Command
     public function __construct(
         private readonly TradingStrategyFactoryInterface $tradingStrategyFactory,
         private readonly CoinRepository $coinRepository,
-        private readonly PositionRepository $positionRepository,
     ) {
         parent::__construct('app:trade');
     }
     protected function configure()
     {
-        $this->addOption('strategy', 's', mode: InputOption::VALUE_REQUIRED, default: 'always-buy');
+        $this->addOption('strategy', 's', mode: InputOption::VALUE_REQUIRED);
         $this->addOption('coin', 'c', mode: InputOption::VALUE_REQUIRED);
     }
 
@@ -34,12 +33,10 @@ class TradeCommand extends Command
     {
         $coin = $input->getOption('coin');
         $coin = $this->coinRepository->findOneBy(['code' => $coin]);
-        while ($coin && $this->positionRepository->getTotalNotClosedCount() < 5) {
-            $strategy = $this->tradingStrategyFactory->create($input->getOption('strategy'), $coin);
-            if (!$strategy->hasOpenedPosition()) {
-                $strategy->openPosition();
-            }
-            $strategy->сlosePosition();
+        $strategy = $this->tradingStrategyFactory->create($input->getOption('strategy'), $coin);
+        while (true) {
+            $strategy->dispatchEvents();
+            sleep(60);
         }
 
         return self::SUCCESS;

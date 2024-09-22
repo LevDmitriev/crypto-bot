@@ -20,6 +20,6 @@ class AccountRepository
     public function getWalletBalance(): WalletBalance
     {
         $result = $this->byBitApi->accountApi()->getWalletBalance(['accountType' => 'UNIFIED']);
-        return $this->denormalizer->denormalize($result['list'], WalletBalance::class);
+        return $this->denormalizer->denormalize($result['list'][0], WalletBalance::class);
     }
 }

@@ -21,7 +21,7 @@ class PositionRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('p')
             ->select('COUNT(p)')
-            ->where('status != :status')
+            ->andWhere('p.status <> :status')
             ->setParameter('status', Position\Status::Closed)
             ->getQuery()
             ->getSingleScalarResult();
@@ -39,13 +39,23 @@ class PositionRepository extends ServiceEntityRepository
     public function findOneNotClosedByCoin(Coin $coin): ?Position
     {
         return $this->createQueryBuilder('p')
-            ->leftJoin('p.buyOrder', 'buyOrder')
-            ->where('buyOrder.coin = :coin')
-            ->where('status != :status')
+            ->andWhere('p.coin = :coin')
+            ->andWhere('p.status <> :status')
             ->setParameter('coin', $coin)
             ->setParameter('status', Position\Status::Closed)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * Найти все позиции
+     * @param Coin $coin Монета
+     *
+     * @return array
+     */
+    public function findAllByCoin(Coin $coin): array
+    {
+        return parent::findBy(['coin' => $coin->getId()]);
     }
     //    /**
     //     * @return Position[] Returns an array of Position objects

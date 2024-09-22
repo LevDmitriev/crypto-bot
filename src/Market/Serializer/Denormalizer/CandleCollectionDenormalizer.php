@@ -23,7 +23,7 @@ class CandleCollectionDenormalizer implements DenormalizerInterface, Denormalize
     {
         $collection = new CandleCollection();
         foreach ($data as $kline) {
-            return $collection->add($this->denormalize($kline, Candle::class));
+            $collection->add($this->denormalizer->denormalize($kline, Candle::class));
         }
 
         return $collection;
