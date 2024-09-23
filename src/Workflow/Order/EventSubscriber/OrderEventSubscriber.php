@@ -2,12 +2,17 @@
 
 declare(strict_types=1);
 
+namespace App\Workflow\Order\EventSubscriber;
+
 use App\Entity\Order;
 use ByBit\SDK\ByBitApi;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Workflow\Event\TransitionEvent;
 
-class StartCancellingEventSubscriber implements EventSubscriberInterface
+/**
+ * Обработчик событий заказа
+ */
+class OrderEventSubscriber implements EventSubscriberInterface
 {
     public function __construct(private readonly ByBitApi $byBitApi)
     {
@@ -18,7 +23,7 @@ class StartCancellingEventSubscriber implements EventSubscriberInterface
      */
     public static function getSubscribedEvents()
     {
-        return [TransitionEvent::getName('order', 'start_canceling') => 'startCancelling'];
+        return [TransitionEvent::getName('order', 'cancel') => 'startCancelling'];
     }
 
 
@@ -26,15 +31,12 @@ class StartCancellingEventSubscriber implements EventSubscriberInterface
     {
         $order = $event->getSubject();
         assert($order instanceof Order);
-        $response = $this->byBitApi->tradeApi()->cancelOrder(
+        $this->byBitApi->tradeApi()->cancelOrder(
             [
                 'orderLinkId' => $order->getId(),
                 'category' => $order->getCategory()->value,
                 'symbol' => $order->getSymbol(),
             ]
         );
-        if ($response['retMsg'] !== 'OK') {
-            throw new \Exception("Ошибка отмены приказа:" . $response['retMsg']);
-        }
     }
 }

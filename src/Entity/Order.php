@@ -332,4 +332,22 @@ class Order
     {
         return $this->getOrderFilter() === OrderFilter::Order;
     }
+
+    /**
+     * Полностью выполнен?
+     * @return bool
+     */
+    public function isFilled(): bool
+    {
+        return $this->getStatus() === Status::Filled->value;
+    }
+
+    /**
+     * Новый?
+     * @return bool
+     */
+    public function isNew(): bool
+    {
+        return $this->getStatus() === Status::New->value;
+    }
 }

@@ -111,7 +111,8 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $scale
         );
         /** @var string $quantity Кол-во USDT на которое будут куплены монеты */
-        $quantity = bcdiv(bcmul($risk, '100', $scale), $stopPercent, $scale);
+        //$quantity = bcdiv(bcmul($risk, '100', $scale), $stopPercent, $scale);
+        $quantity = '1';
         $buyOrder = $this->orderFactory->create(coin: $this->coin, quantity: $quantity);
         $position = new Position();
         $position->setCoin($this->coin);
@@ -119,8 +120,8 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position, $buyOrder, $stopPrice) {
             $entityManager->persist($position);
         });
-        $this->logger?->debug("Открыта позиция c ID {$position->getId()} на $quantity USDT");
-        if ($buyOrder->getStatus() === Status::Filled->value) {
+        if ($buyOrder->isFilled()) {
+            $this->logger?->debug("Открыта позиция c ID {$position->getId()} на $quantity USDT");
             $this->commandBus->dispatch(
                 new CreateOrderToPositionCommand(
                     positionId:   $position->getId(),
@@ -196,22 +197,20 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         if ($this->canOpenPosition()) {
             $this->openPosition();
         }
+        // todo написать поиск только по монете
         $allPositions = $this->positionRepository->findAll();
         foreach ($allPositions as $position) {
-            $buyOrder = $position?->getOrders()->first();
-            if ($buyOrder?->getStatus() === Status::Filled->value) {
-                /** @var bool $is2HoursExpired Истекло 2 часа от входа в позицию  */
-                $is2HoursExpired = (time() - $position->getCreatedAt()->getTimestamp()) > (2*3600);
-                if (!$is2HoursExpired) {
-                    $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getCode() . 'USDT');
-                    $averagePrice = $position->getAveragePrice();
-                    $priceChange = bcdiv($lastTradedPrice, $averagePrice, 2);
-                    if (\bccomp($priceChange, '1.08', 2) >= 0) {
-                        $this->dispatcher->dispatch(new PriceIncreased8OrMore($position));
-                    }
-                    if (\bccomp($priceChange, '1.12', 2) >= 0) {
-                        $this->dispatcher->dispatch(new PriceIncreased12OrMore($position));
-                    }
+            /** @var bool $is2HoursExpired Истекло 2 часа от входа в позицию  */
+            $is2HoursExpired = (time() - $position->getCreatedAt()->getTimestamp()) > (2*3600);
+            if (!$is2HoursExpired) {
+                $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getCode() . 'USDT');
+                $averagePrice = $position->getAveragePrice();
+                $priceChange = bcdiv($lastTradedPrice, $averagePrice, 2);
+                if (\bccomp($priceChange, '1.08', 2) >= 0) {
+                    $this->dispatcher->dispatch(new PriceIncreased8OrMore($position));
+                }
+                if (\bccomp($priceChange, '1.12', 2) >= 0) {
+                    $this->dispatcher->dispatch(new PriceIncreased12OrMore($position));
                 }
             }
         }

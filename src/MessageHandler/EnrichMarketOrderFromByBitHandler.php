@@ -36,7 +36,7 @@ class EnrichMarketOrderFromByBitHandler
     {
         /** @var Order|null $order */
         $order = $this->orderRepository->find($message->id);
-        if ($order && $order->getStatus() === Status::New && $order->isMarket() && $order->isCommon()) {
+        if ($order && $order->isNew() && $order->isMarket() && $order->isCommon()) {
             $orderFromApi = $this->byBitApi->tradeApi()->getOpenOrders(['orderLinkId' => $message->id, 'category' => 'spot']);
             $orderFromApi = isset($orderFromApi['list'][0]) ? $orderFromApi['list'][0] : $orderFromApi;
             if (isset($orderFromApi['orderStatus']) && ByBitStatus::isClosedStatus(ByBitStatus::from($orderFromApi['orderStatus']))) {

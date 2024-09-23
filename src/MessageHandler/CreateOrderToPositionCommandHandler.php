@@ -28,17 +28,19 @@ readonly class CreateOrderToPositionCommandHandler
     {
         $position = $this->positionRepository->find($command->positionId);
         $coin = $this->coinRepository->find($command->coinId);
-        $order = $this->orderFactory->create(
-            coin:         $coin,
-            quantity:     $command->quantity,
-            price:        $command->price,
-            triggerPrice: $command->triggerPrice,
-            side:         $command->side,
-            category:     $command->category,
-            type:         $command->type,
-            orderFilter:  $command->orderFilter
-        );
-        $position->addOrder($order);
-        $this->entityManager->persist($position);
+        if ($position && $coin) {
+            $order = $this->orderFactory->create(
+                coin:         $coin,
+                quantity:     $command->quantity,
+                price:        $command->price,
+                triggerPrice: $command->triggerPrice,
+                side:         $command->side,
+                category:     $command->category,
+                type:         $command->type,
+                orderFilter:  $command->orderFilter
+            );
+            $position->addOrder($order);
+            $this->entityManager->persist($position);
+        }
     }
 }

@@ -38,9 +38,7 @@ framework:
                 fill:
                     from: [ New, Cancelling ]
                     to: Filled
-                start_canceling:
-                    from: [ New ]
-                    to: Cancelling
                 cancel:
                     from: [ New, Cancelling ]
+                    guard: "subject.isNew()"
                     to: Cancelled

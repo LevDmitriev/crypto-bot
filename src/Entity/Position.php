@@ -66,7 +66,7 @@ class Position
     public function getAveragePrice(): string
     {
         // todo когда будет массив больше 1 - переделать
-        return $this->orders->findFirst(fn (Order $order) => $order->getSide() === Side::Buy)->getAveragePrice();
+        return $this->orders->findFirst(fn (int $key, Order $order) => $order->getSide() === Side::Buy)->getAveragePrice();
     }
 
     /**
