@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Workflow\Position;
 
 use App\Entity\Order;
+use App\Entity\Order\ByBit\Side;
 use App\Entity\Position;
+use App\Factory\OrderFactory;
 use ByBit\SDK\ByBitApi;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Workflow\Event\TransitionEvent;
@@ -16,8 +18,10 @@ use Symfony\Component\Workflow\WorkflowInterface;
  */
 class PositionEventSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly WorkflowInterface $orderStateMachine)
-    {
+    public function __construct(
+        private readonly WorkflowInterface $orderStateMachine,
+        private readonly OrderFactory $orderFactory
+    ) {
     }
 
     /**
@@ -25,7 +29,10 @@ class PositionEventSubscriber implements EventSubscriberInterface
      */
     public static function getSubscribedEvents()
     {
-        return [TransitionEvent::getName('position', 'close') => 'cancelAllOrders'];
+        return [
+            TransitionEvent::getName('position', 'close') => 'cancelAllOrders',
+            TransitionEvent::getName('position', 'close') => 'sellAllCoins',
+        ];
     }
 
 
@@ -38,5 +45,23 @@ class PositionEventSubscriber implements EventSubscriberInterface
                 $this->orderStateMachine->apply($order, 'cancel');
             }
         }
+    }
+
+    /**
+     * Добавить в позицию приказ на продажу оставшихся монет
+     * @param TransitionEvent $event
+     *
+     * @return void
+     */
+    public function sellAllCoins(TransitionEvent $event): void
+    {
+        $position = $event->getSubject();
+        assert($position instanceof Position);
+        $sellOrder = $this->orderFactory->create(
+            coin: $position->getCoin(),
+            quantity: $position->getNotSoldQuantity(),
+            side: Side::Sell
+        );
+        $position->addOrder($sellOrder);
     }
 }

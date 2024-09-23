@@ -4,7 +4,10 @@ namespace App\Repository;
 
 use App\Entity\Coin;
 use App\Entity\Position;
+use App\Entity\Position\Status;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -22,9 +25,20 @@ class PositionRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('p')
             ->select('COUNT(p)')
             ->andWhere('p.status <> :status')
-            ->setParameter('status', Position\Status::Closed)
+            ->setParameter('status', Status::Closed)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * Найти все незакрытые позиции
+     * @return Collection<int, Position>
+     */
+    public function findAllNotClosed(): Collection
+    {
+        $criteria = new Criteria();
+        $criteria->where(Criteria::expr()->neq('status', Status::Closed->value));
+        return $this->matching($criteria);
     }
 
     public function getTotalCount(): int
@@ -42,7 +56,7 @@ class PositionRepository extends ServiceEntityRepository
             ->andWhere('p.coin = :coin')
             ->andWhere('p.status <> :status')
             ->setParameter('coin', $coin)
-            ->setParameter('status', Position\Status::Closed)
+            ->setParameter('status', Status::Closed->value)
             ->getQuery()
             ->getOneOrNullResult();
     }

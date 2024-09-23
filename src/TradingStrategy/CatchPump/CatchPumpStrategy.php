@@ -55,6 +55,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function canOpenPosition(): bool
     {
+        return true;
         $result = false;
         if (!$this->positionRepository->findOneNotClosedByCoin($this->coin) && $this->positionRepository->getTotalNotClosedCount() < 5) {
             /** @var CandleCollection $candles7hours 7 часовая свечка */
@@ -112,7 +113,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         );
         /** @var string $quantity Кол-во USDT на которое будут куплены монеты */
         //$quantity = bcdiv(bcmul($risk, '100', $scale), $stopPercent, $scale);
-        $quantity = '1';
+        $quantity = '7';
         $buyOrder = $this->orderFactory->create(coin: $this->coin, quantity: $quantity);
         $position = new Position();
         $position->setCoin($this->coin);
@@ -197,8 +198,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         if ($this->canOpenPosition()) {
             $this->openPosition();
         }
-        // todo написать поиск только по монете
-        $allPositions = $this->positionRepository->findAll();
+        $allPositions = $this->positionRepository->findAllByCoin($this->coin);
         foreach ($allPositions as $position) {
             /** @var bool $is2HoursExpired Истекло 2 часа от входа в позицию  */
             $is2HoursExpired = (time() - $position->getCreatedAt()->getTimestamp()) > (2*3600);

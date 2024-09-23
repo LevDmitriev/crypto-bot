@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Workflow\Order\EventSubscriber;
 
+use App\Bybit\ErrorCodes;
 use App\Entity\Order;
 use ByBit\SDK\ByBitApi;
+use ByBit\SDK\Exceptions\HttpException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Workflow\Event\TransitionEvent;
 
@@ -31,12 +33,19 @@ class OrderEventSubscriber implements EventSubscriberInterface
     {
         $order = $event->getSubject();
         assert($order instanceof Order);
-        $this->byBitApi->tradeApi()->cancelOrder(
-            [
-                'orderLinkId' => $order->getId(),
-                'category' => $order->getCategory()->value,
-                'symbol' => $order->getSymbol(),
-            ]
-        );
+        try {
+            $this->byBitApi->tradeApi()->cancelOrder(
+                [
+                    'orderLinkId' => (string) $order->getId(),
+                    'category' => $order->getCategory()->value,
+                    'symbol' => $order->getSymbol(),
+                ]
+            );
+        } catch (HttpException $e) {
+            // Если приказа не существует всё в порядке. Он мог быть уже отменён или находится в статусе, где его нельзя отменить.
+            if ($e->getCode() != ErrorCodes::ORDER_DOES_NOT_EXISTS) {
+                throw $e;
+            }
+        }
     }
 }

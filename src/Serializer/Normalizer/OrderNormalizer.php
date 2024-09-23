@@ -31,6 +31,7 @@ class OrderNormalizer implements NormalizerInterface
             'orderType' => $object->getType()->value,
             'qty' => (string) $object->getQuantity(),
             'price' => $object->getType() === Order\ByBit\Type::Limit ? (string) $object->getPrice() : null,
+            'triggerPrice' => $object->getTriggerPrice(),
         ];
     }
 

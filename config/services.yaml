@@ -18,7 +18,8 @@ services:
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
-            - '../src/Message/'
+            - '../src/Bybit/'
+            - '../src/**/Message/'
             - '../src/**/Model'
             - '../src/TradingStrategy/'
             - '../src/Kernel.php'

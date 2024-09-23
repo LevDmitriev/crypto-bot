@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\EventListener;
 
 use App\Entity\Order;
+use App\Entity\Order\Status;
 use App\Messages\EnrichMarketOrderFromByBitCommand;
 use ByBit\SDK\ByBitApi;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
@@ -33,9 +34,9 @@ readonly class PostUpdateOrderSendToByBitListener
      */
     public function sendToByBit(Order $order): void
     {
-        if ($order->getStatus() === Order\Status::New->value) {
+        if ($order->getStatus() === Status::New->value) {
             $orderArray = [
-                'orderLinkId' => $order->getId(),
+                'orderLinkId' => (string) $order->getId(),
                 'symbol' => $order->getCoin()->getCode() . 'USDT',
                 'category' => $order->getCategory()->value,
             ];
@@ -43,11 +44,11 @@ readonly class PostUpdateOrderSendToByBitListener
             foreach ($changeSet as $field => $value) {
                 switch ($field) {
                     case "quantity": $orderArray['qty'] = $value;
-                    break;
+                        break;
                     case "price": $orderArray['price'] = $value;
-                    break;
+                        break;
                     case "triggerPrice": $orderArray['triggerPrice'] = $value;
-                    break;
+                        break;
                 }
             }
             $response = $this->byBitApi->tradeApi()->amendOrder($orderArray);

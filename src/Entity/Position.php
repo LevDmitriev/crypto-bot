@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Entity\Order\ByBit\Side;
+use App\Entity\Order\Status;
 use App\Repository\PositionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -24,8 +25,8 @@ class Position
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $status = null;
+    #[ORM\Column(length: 255, nullable: false)]
+    private ?string $status = Status::New->value;
 
     /**
      * @var Collection<int, Order>
@@ -56,7 +57,7 @@ class Position
 
     public function getCoin(): Coin
     {
-        return $this->getBuyOrder()->getCoin();
+        return $this->coin;
     }
 
     /**
@@ -67,6 +68,26 @@ class Position
     {
         // todo когда будет массив больше 1 - переделать
         return $this->orders->findFirst(fn (int $key, Order $order) => $order->getSide() === Side::Buy)->getAveragePrice();
+    }
+
+    /**
+     * Получить общее кол-во непроданных монет
+     * @return string
+     */
+    public function getNotSoldQuantity(): string
+    {
+        $result = '0';
+        foreach ($this->orders as $order) {
+            if ($order->isFilled()) {
+                switch ($order->getSide()) {
+                    case Side::Buy: $result = bcadd($result, $order->getCumulativeExecutedQuantity(), 6);
+                    break;
+                    case Side::Sell: $result = bcsub($result, $order->getCumulativeExecutedQuantity(), 6);
+                    break;
+                }
+            }
+        }
+        return $result;
     }
 
     /**
