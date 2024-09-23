@@ -305,4 +305,31 @@ class Order
 
         return $this;
     }
+
+    /**
+     * Является ли стоп-приказом
+     * @return bool
+     */
+    public function isStop(): bool
+    {
+        return $this->orderFilter === OrderFilter::StopOrder;
+    }
+
+    /**
+     * Является ли рыночным
+     * @return bool
+     */
+    public function isMarket(): bool
+    {
+        return $this->type === Type::Market;
+    }
+
+    /**
+     * Является ли обычным приказом. То есть не стоп-приказом и не TP/SL
+     * @return bool
+     */
+    public function isCommon(): bool
+    {
+        return $this->getOrderFilter() === OrderFilter::Order;
+    }
 }

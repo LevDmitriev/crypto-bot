@@ -419,6 +419,7 @@ class CatchPumpStrategyTest extends KernelTestCase
         $position = new Position();
         $position->setCoin($coin);
         $position->addOrder($buyOrder);
+        $position->addOrder(new Order());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -460,6 +461,8 @@ class CatchPumpStrategyTest extends KernelTestCase
         $position = new Position();
         $position->setCoin($coin);
         $position->addOrder($buyOrder);
+        $position->addOrder(new Order());
+        $position->addOrder(new Order());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,

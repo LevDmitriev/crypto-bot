@@ -60,7 +60,7 @@ class Position
     }
 
     /**
-     * Получить сруднюю цену позиции
+     * Получить среднюю цену позиции
      * @return string
      */
     public function getAveragePrice(): string

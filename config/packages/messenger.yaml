@@ -8,40 +8,20 @@ framework:
                 middleware:
                     - doctrine_transaction
         transports:
-            # https://symfony.com/doc/current/messenger.html#transport-configuration
-#             async: '%env(MESSENGER_TRANSPORT_DSN)%'
-            # failed: 'doctrine://default?queue_name=failed'
              sync:
                 dsn: 'sync://'
                 retry_strategy:
                     delay: 5000
              in-memory: 'in-memory://'
              async: '%env(MESSENGER_TRANSPORT_DSN)%'
-             orders_created:
-                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
-                 options:
-                     exchange:
-                         name: orders_created
-                         type: 'direct'
-                     queues:
-                         orders_created: ~
-             orders_enrich_from_bybit:
-                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
-                 options:
-                     exchange:
-                         name: orders_enrich_from_bybit
-                         type: 'direct'
-                     queues:
-                         orders_enrich_from_bybit: ~
-             
-
         routing:
             App\Messages\CreateOrderToPositionCommand: async
-            App\Messages\EnrichOrderFromByBitCommand: sync
-# when@test:
-#    framework:
-#        messenger:
-#            transports:
-#                # replace with your transport name here (e.g., my_transport: 'in-memory://')
-#                # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test
-#                async: 'in-memory://'
+            App\Messages\EnrichOrderFromByBitCommand: async
+            App\Messages\EnrichMarketOrderFromByBitCommand: sync
+when@test:
+    framework:
+        messenger:
+            transports:
+                # replace with your transport name here (e.g., my_transport: 'in-memory://')
+                # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test
+                async: 'in-memory://'

@@ -8,5 +8,5 @@ enum OrderFilter: string
 {
     case Order = 'Order';
     case tpslOrder = 'tpslOrder';
-    case StopOrder = 'inverse';
+    case StopOrder = 'StopOrder';
 }

@@ -155,13 +155,19 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function sell50Percent(PriceIncreased8OrMore $event): void
     {
-        assert($event->position->getOrders()->count() > 0); // Должен быть хотя бы 1 приказ на покупку
-        $quantity = $event->position->getOrders()->findFirst(fn (int $key, Order $order) => $order->getSide() === Side::Buy)->getQuantity();
-        $quantityForSale = bcdiv($quantity, '2', 2);
-        $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
-        $event->position->addOrder($order);
-        $this->entityManager->persist($event->position);
-        $this->entityManager->flush();
+        if ($event->position->getOrders()->count() === 2) {
+            $buyOrder = $event->position->getOrders()->findFirst(fn (int $key, Order $order) => $order->getSide() === Side::Buy);
+            $stopOrder = $event->position->getOrders()->findFirst(fn (int $key, Order $order) => $order->getOrderFilter() === OrderFilter::StopOrder);
+            $stopOrder->setQuantity(bcdiv($stopOrder->getQuantity(), '2', 4));
+            $quantityForSale = bcdiv($buyOrder->getQuantity(), '2', 2);
+            $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
+            $event->position->addOrder($order);
+            $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($order, $quantityForSale) {
+                $entityManager->persist($order);
+            });
+            $this->entityManager->persist($event->position);
+            $this->entityManager->flush();
+        }
     }
     /**
      * Выставить приказ на продажу 25% позиции
@@ -172,12 +178,14 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     public function sell25Percent(PriceIncreased12OrMore $event): void
     {
         assert($event->position->getOrders()->count() > 0); // Должен быть хотя бы 1 приказ на покупку
-        $quantity = $event->position->getOrders()->findFirst(fn (int $key, Order $order) => $order->getSide() === Side::Buy)->getQuantity();
-        $quantityForSale = bcdiv($quantity, '4', 2);
-        $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
-        $event->position->addOrder($order);
-        $this->entityManager->persist($event->position);
-        $this->entityManager->flush();
+        if ($event->position->getOrders()->count() === 3) {
+            $quantity = $event->position->getOrders()->findFirst(fn (int $key, Order $order) => $order->getSide() === Side::Buy)->getQuantity();
+            $quantityForSale = bcdiv($quantity, '4', 2);
+            $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
+            $event->position->addOrder($order);
+            $this->entityManager->persist($event->position);
+            $this->entityManager->flush();
+        }
     }
 
     /**
@@ -190,15 +198,20 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         }
         $allPositions = $this->positionRepository->findAll();
         foreach ($allPositions as $position) {
-            if ($position?->getOrders()->first()?->getStatus() === Status::Filled->value) {
-                $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getCode() . 'USDT');
-                $averagePrice = $position->getAveragePrice();
-                $priceChange = bcdiv($lastTradedPrice, $averagePrice, 2);
-                if (\bccomp($priceChange, '1.08', 2) >= 0) {
-                    $this->dispatcher->dispatch(new PriceIncreased8OrMore($position));
-                }
-                if (\bccomp($priceChange, '1.12', 2) >= 0) {
-                    $this->dispatcher->dispatch(new PriceIncreased12OrMore($position));
+            $buyOrder = $position?->getOrders()->first();
+            if ($buyOrder?->getStatus() === Status::Filled->value) {
+                /** @var bool $is2HoursExpired Истекло 2 часа от входа в позицию  */
+                $is2HoursExpired = (time() - $position->getCreatedAt()->getTimestamp()) > (2*3600);
+                if (!$is2HoursExpired) {
+                    $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getCode() . 'USDT');
+                    $averagePrice = $position->getAveragePrice();
+                    $priceChange = bcdiv($lastTradedPrice, $averagePrice, 2);
+                    if (\bccomp($priceChange, '1.08', 2) >= 0) {
+                        $this->dispatcher->dispatch(new PriceIncreased8OrMore($position));
+                    }
+                    if (\bccomp($priceChange, '1.12', 2) >= 0) {
+                        $this->dispatcher->dispatch(new PriceIncreased12OrMore($position));
+                    }
                 }
             }
         }

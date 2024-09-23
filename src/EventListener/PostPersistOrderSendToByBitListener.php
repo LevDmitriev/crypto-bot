@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\EventListener;
 
 use App\Entity\Order;
+use App\MessageHandler\EnrichOrderFromByBitHandler;
+use App\Messages\EnrichMarketOrderFromByBitCommand;
 use App\Messages\EnrichOrderFromByBitCommand;
 use ByBit\SDK\ByBitApi;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
@@ -18,7 +20,6 @@ class PostPersistOrderSendToByBitListener
 {
     public function __construct(
         private ByBitApi $byBitApi,
-        //        #[Autowire(service: 'app.serializer.bybit')]
         private NormalizerInterface $normalizer,
         private MessageBusInterface $messageBus
     ) {
@@ -33,10 +34,11 @@ class PostPersistOrderSendToByBitListener
      */
     public function sendToByBit(Order $order): void
     {
-        /** @var Order|null $order */
-        if ($order && $order->getByBitStatus() === Order\ByBit\Status::New) {
-            $orderArray = $this->normalizer->normalize($order, '[]');
-            $response = $this->byBitApi->tradeApi()->placeOrder($orderArray);
+        $orderArray = $this->normalizer->normalize($order, '[]');
+        $response = $this->byBitApi->tradeApi()->placeOrder($orderArray);
+        if ($order->isMarket() && $order->isCommon()) {
+            $this->messageBus->dispatch(new EnrichMarketOrderFromByBitCommand($response['orderLinkId']));
+        } else {
             $this->messageBus->dispatch(new EnrichOrderFromByBitCommand($response['orderLinkId']));
         }
     }
