@@ -112,8 +112,8 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $scale
         );
         /** @var string $quantity Кол-во USDT на которое будут куплены монеты */
-        //$quantity = bcdiv(bcmul($risk, '100', $scale), $stopPercent, $scale);
-        $quantity = '7';
+        $quantity = bcdiv(bcmul($risk, '100', $scale), $stopPercent, $scale);
+        //$quantity = '7';
         $buyOrder = $this->orderFactory->create(coin: $this->coin, quantity: $quantity);
         $position = new Position();
         $position->setCoin($this->coin);

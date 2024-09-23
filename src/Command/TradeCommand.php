@@ -34,8 +34,8 @@ class TradeCommand extends Command
         $coin = $input->getOption('coin');
         $coin = $this->coinRepository->findOneBy(['code' => $coin]);
         $strategy = $this->tradingStrategyFactory->create($input->getOption('strategy'), $coin);
-        $strategy->dispatchEvents();
-        return self::SUCCESS;
+        //$strategy->dispatchEvents();
+        //return self::SUCCESS;
         while (true) {
             $strategy->dispatchEvents();
             sleep(60);
