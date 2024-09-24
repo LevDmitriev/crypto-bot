@@ -215,9 +215,11 @@ class Order
     /**
      * @param string $averagePrice
      */
-    public function setAveragePrice(string $averagePrice): void
+    public function setAveragePrice(string $averagePrice): self
     {
         $this->averagePrice = $averagePrice;
+
+        return $this;
     }
 
     /**
@@ -231,9 +233,10 @@ class Order
     /**
      * @param string $cumulativeExecutedQuantity
      */
-    public function setCumulativeExecutedQuantity(string $cumulativeExecutedQuantity): void
+    public function setCumulativeExecutedQuantity(string $cumulativeExecutedQuantity): self
     {
         $this->cumulativeExecutedQuantity = $cumulativeExecutedQuantity;
+        return $this;
     }
 
     /**

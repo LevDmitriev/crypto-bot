@@ -16,15 +16,14 @@ use App\Market\Repository\CandleRepositoryInterface;
 use App\Messages\CreateOrderToPositionCommand;
 use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
-use App\TradingStrategy\CatchPump\Event\PriceIncreased12OrMore;
-use App\TradingStrategy\CatchPump\Event\PriceIncreased13OrMore;
-use App\TradingStrategy\CatchPump\Event\PriceIncreased8OrMore;
+use App\TradingStrategy\CatchPump\Event\LastTwoHoursPriceChangedEvent;
 use App\TradingStrategy\TradingStrategyInterface;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -46,7 +45,8 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         private readonly EventDispatcherInterface $dispatcher,
         private readonly OrderFactory $orderFactory,
         private readonly MessageBusInterface $commandBus,
-        private readonly WorkflowInterface $positionStateMachine
+        private readonly WorkflowInterface $positionStateMachine,
+        private readonly LockFactory $lockFactory
     ) {
     }
 
@@ -144,85 +144,116 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     public static function getSubscribedEvents()
     {
         return [
-            PriceIncreased8OrMore::NAME => 'sell50Percent',
-            PriceIncreased12OrMore::NAME => 'sell25Percent',
-            PriceIncreased13OrMore::NAME => 'moveStopPlus10point2',
+            LastTwoHoursPriceChangedEvent::NAME => ['moveStopPlusPoint2','sell50Percent', 'sell25Percent', 'moveStopPlus10point2']
         ];
     }
 
     /**
      * Выставить приказ на продажу 50% позиции
-     * @param PriceIncreased8OrMore $event
+     * @param LastTwoHoursPriceChangedEvent $event
      *
      * @return void
      */
-    public function sell50Percent(PriceIncreased8OrMore $event): void
+    public function sell50Percent(LastTwoHoursPriceChangedEvent $event): void
     {
-        $orders = $event->position->getOrders();
-        $buyOrder = $orders->filterBuyOrders()->first();
-        $quantityForSale = bcdiv($buyOrder->getQuantity(), '2', 4);
-        $isAlreadyHaveSellOrder = (bool) $orders
-            ->filterSellOrders()
-            ->filterCommonOrders()
-            ->filterMarketOrders()
-            ->filterByQuantity($quantityForSale)
-            ->count()
-        ;
-        if (!$isAlreadyHaveSellOrder) {
-            $stopOrder = $orders->filterStopOrders()->first();
-            $stopOrder->setTriggerPrice(bcmul($stopOrder->getQuantity(), '1.02', 4));
-            $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
-            $event->position->addOrder($order);
-            $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($event) {
-                $entityManager->persist($event->position);
-            });
+        $lockKey = self::NAME."-position-price-increased-8percent-{$event->position->getId()}";
+        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+        if ($event->changePercent > 8 && $lock->acquire()) {
+            $orders = $event->position->getOrders();
+            $buyOrder = $orders->filterBuyOrders()->first();
+            $quantityForSale = bcdiv($buyOrder->getQuantity(), '2', 4);
+            $isAlreadyHaveSellOrder = (bool) $orders
+                ->filterSellOrders()
+                ->filterCommonOrders()
+                ->filterMarketOrders()
+                ->filterByQuantity($quantityForSale)
+                ->count()
+            ;
+            if (!$isAlreadyHaveSellOrder && $stopOrder = $orders->filterStopOrders()->first()) {
+                $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.02', 4));
+                $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
+                $event->position->addOrder($order);
+                $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($event) {
+                    $entityManager->persist($event->position);
+                });
+            }
         }
     }
     /**
      * Выставить приказ на продажу 25% позиции
-     * @param PriceIncreased12OrMore $event
+     * @param LastTwoHoursPriceChangedEvent $event
      *
      * @return void
      */
-    public function sell25Percent(PriceIncreased12OrMore $event): void
+    public function sell25Percent(LastTwoHoursPriceChangedEvent $event): void
     {
-        $orders = $event->position->getOrders();
-        $buyOrder = $orders->filterBuyOrders()->first();
-        $quantityForSale = bcdiv($buyOrder->getQuantity(), '4', 4);
-        $isAlreadyHaveSellOrder = (bool) $orders
-            ->filterSellOrders()
-            ->filterCommonOrders()
-            ->filterMarketOrders()
-            ->filterByQuantity($quantityForSale)
-            ->count()
-        ;
-        if (!$isAlreadyHaveSellOrder) {
-            $stopOrder = $orders->filterStopOrders()->first();
-            $stopOrder->setTriggerPrice(bcmul($buyOrder->getQuantity(), '1.082', 4));
-            $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
-            $event->position->addOrder($order);
-            $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($event) {
-                $entityManager->persist($event->position);
-            });
+        $lockKey = self::NAME."-position-price-increased-12percent-{$event->position->getId()}";
+        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+        if ($event->changePercent > 12 && $lock->acquire()) {
+            $orders = $event->position->getOrders();
+            $buyOrder = $orders->filterBuyOrders()->first();
+            $quantityForSale = bcdiv($buyOrder->getQuantity(), '4', 4);
+            $isAlreadyHaveSellOrder = (bool) $orders
+                ->filterSellOrders()
+                ->filterCommonOrders()
+                ->filterMarketOrders()
+                ->filterByQuantity($quantityForSale)
+                ->count()
+            ;
+            if (!$isAlreadyHaveSellOrder && $stopOrder = $orders->filterStopOrders()->first()) {
+                $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.082', 4));
+                $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
+                $event->position->addOrder($order);
+                $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($event) {
+                    $entityManager->persist($event->position);
+                });
+            }
         }
     }
 
     /**
      * Увеличить триггерную цену стопа на 10,2% от изначальной
-     * @param PriceIncreased13OrMore $event
+     * @param LastTwoHoursPriceChangedEvent $event
      *
      * @return void
      */
-    public function moveStopPlus10point2(PriceIncreased13OrMore $event): void
+    public function moveStopPlus10point2(LastTwoHoursPriceChangedEvent $event): void
     {
-        $orders = $event->position->getOrders();
-        $buyOrder = $orders->filterBuyOrders()->first();
-        $stopOrder = $orders->filterStopOrders()->first();
-        $triggerPrice = bcmul($buyOrder->getQuantity(), '1.012', 4);
-        if ($stopOrder->getTriggerPrice() !== $triggerPrice) {
-            $stopOrder->setTriggerPrice($triggerPrice);
-            $this->entityManager->persist($stopOrder);
-            $this->entityManager->flush();
+        $lockKey = self::NAME."-position-price-increased-13percent-{$event->position->getId()}";
+        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+        if ($event->changePercent > 13 && $lock->acquire()) {
+            $orders = $event->position->getOrders();
+            $buyOrder = $orders->filterBuyOrders()->first();
+            $stopOrder = $orders->filterStopOrders()->first();
+            $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.102', 4);
+            if ($stopOrder->getTriggerPrice() !== $triggerPrice) {
+                $stopOrder->setTriggerPrice($triggerPrice);
+                $this->entityManager->persist($stopOrder);
+                $this->entityManager->flush();
+            }
+        }
+    }
+
+    /**
+     * Увеличить триггерную цену стопа на 0,2% от изначальной
+     * @param LastTwoHoursPriceChangedEvent $event
+     *
+     * @return void
+     */
+    public function moveStopPlusPoint2(LastTwoHoursPriceChangedEvent $event): void
+    {
+        $lockKey = self::NAME."-position-price-increased-2percent-{$event->position->getId()}";
+        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+        if ($event->changePercent > 2 && $lock->acquire()) {
+            $orders = $event->position->getOrders();
+            $buyOrder = $orders->filterBuyOrders()->first();
+            $stopOrder = $orders->filterStopOrders()->first();
+            $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.002', 4);
+            if ($stopOrder->getTriggerPrice() !== $triggerPrice) {
+                $stopOrder->setTriggerPrice($triggerPrice);
+                $this->entityManager->persist($stopOrder);
+                $this->entityManager->flush();
+            }
         }
     }
 
@@ -239,22 +270,16 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $criteria->andWhere(Criteria::expr()->eq('coin', $this->coin));
         $criteria->andWhere(Criteria::expr()->eq('strategyName', static::NAME));
         $openedPositions = $this->positionRepository->matching($criteria);
+        /** @var Position $position */
         foreach ($openedPositions as $position) {
+            $twoHours = 7200;
             /** @var bool $is2HoursExpired Истекло 2 часа от входа в позицию  */
-            $is2HoursExpired = (time() - $position->getCreatedAt()->getTimestamp()) > (2*3600);
+            $is2HoursExpired = (time() - $position->getCreatedAt()->getTimestamp()) > $twoHours;
             if (!$is2HoursExpired) {
                 $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getByBitCode() . 'USDT');
                 $averagePrice = $position->getAveragePrice();
-                $priceChange = bcdiv($lastTradedPrice, $averagePrice, 2);
-                if (\bccomp($priceChange, '1.08', 2) >= 0) {
-                    $this->dispatcher->dispatch(new PriceIncreased8OrMore($position));
-                }
-                if (\bccomp($priceChange, '1.12', 2) >= 0) {
-                    $this->dispatcher->dispatch(new PriceIncreased12OrMore($position));
-                }
-                if (\bccomp($priceChange, '1.13', 2) >= 0) {
-                    $this->dispatcher->dispatch(new PriceIncreased13OrMore($position));
-                }
+                $priceChangePercent = (float) bcmul(bcsub(bcdiv($lastTradedPrice, $averagePrice, 2), '1', 2), '100', 2);
+                $this->dispatcher->dispatch(new LastTwoHoursPriceChangedEvent($position, $priceChangePercent));
             }
         }
     }

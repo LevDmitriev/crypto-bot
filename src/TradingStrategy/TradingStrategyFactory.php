@@ -11,6 +11,7 @@ use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
 use App\TradingStrategy\CatchPump\Strategy\CatchPumpStrategy;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -28,7 +29,8 @@ class TradingStrategyFactory implements TradingStrategyFactoryInterface
         private readonly EventDispatcherInterface $dispatcher,
         private readonly OrderFactory $orderFactory,
         private readonly MessageBusInterface $commandBus,
-        private readonly WorkflowInterface $positionStateMachine
+        private readonly WorkflowInterface $positionStateMachine,
+        private readonly LockFactory $lockFactory
     ) {
     }
 
@@ -45,6 +47,7 @@ class TradingStrategyFactory implements TradingStrategyFactoryInterface
                 orderFactory:         $this->orderFactory,
                 commandBus:           $this->commandBus,
                 positionStateMachine: $this->positionStateMachine,
+                lockFactory:          $this->lockFactory
             )
         };
     }

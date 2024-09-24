@@ -414,12 +414,17 @@ class CatchPumpStrategyTest extends KernelTestCase
         $buyOrder = new Order();
         $buyOrder->setCoin($coin)
             ->setQuantity('2')
+            ->setAveragePrice('100')
             ->setSide(Order\ByBit\Side::Buy)
         ;
         $position = new Position();
         $position->setCoin($coin);
         $position->addOrder($buyOrder);
-        $position->addOrder(new Order());
+        $stopOrder = (new Order())
+            ->setSide(Order\ByBit\Side::Sell)
+            ->setOrderFilter(Order\ByBit\OrderFilter::StopOrder)
+            ;
+        $position->addOrder($stopOrder);
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -431,11 +436,10 @@ class CatchPumpStrategyTest extends KernelTestCase
             commandBus: $this->createMock(MessageBusInterface::class),
             positionStateMachine: $this->createMock(WorkflowInterface::class)
         );
-        $entityManager->expects(self::once())->method('persist')->with($position);
-        $entityManager->expects(self::once())->method('flush');
         $strategy->sell50Percent(new PriceIncreased8OrMore($position));
         $order = $position->getOrders()->last();
-        self::assertEquals('1.00', $order->getQuantity());
+        self::assertEquals('1.0000', $order->getQuantity());
+        self::assertEquals('102.0000', $stopOrder->getTriggerPrice());
         self::assertEquals($coin, $order->getCoin());
         self::assertEquals(Type::Market, $order->getType());
     }
@@ -456,13 +460,17 @@ class CatchPumpStrategyTest extends KernelTestCase
         $buyOrder = new Order();
         $buyOrder->setCoin($coin)
             ->setQuantity('4')
+            ->setAveragePrice('100')
             ->setSide(Order\ByBit\Side::Buy)
         ;
         $position = new Position();
         $position->setCoin($coin);
         $position->addOrder($buyOrder);
-        $position->addOrder(new Order());
-        $position->addOrder(new Order());
+        $stopOrder = (new Order())
+            ->setSide(Order\ByBit\Side::Sell)
+            ->setOrderFilter(Order\ByBit\OrderFilter::StopOrder)
+        ;
+        $position->addOrder($stopOrder);
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -474,11 +482,10 @@ class CatchPumpStrategyTest extends KernelTestCase
             commandBus: $this->createMock(MessageBusInterface::class),
             positionStateMachine: $this->createMock(WorkflowInterface::class)
         );
-        $entityManager->expects(self::once())->method('persist')->with($position);
-        $entityManager->expects(self::once())->method('flush');
         $strategy->sell25Percent(new PriceIncreased12OrMore($position));
         $order = $position->getOrders()->last();
-        self::assertEquals('1.00', $order->getQuantity());
+        self::assertEquals('1.0000', $order->getQuantity());
+        self::assertEquals('1082.0000', $stopOrder->getTriggerPrice());
         self::assertEquals($coin, $order->getCoin());
         self::assertEquals(Type::Market, $order->getType());
     }
