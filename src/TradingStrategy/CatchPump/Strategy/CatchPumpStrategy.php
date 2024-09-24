@@ -13,6 +13,7 @@ use App\Factory\OrderFactory;
 use App\Market\Model\CandleCollection;
 use App\Market\Model\CandleInterface;
 use App\Market\Repository\CandleRepositoryInterface;
+use App\Messages\ClosePositionCommand;
 use App\Messages\CreateOrderToPositionCommand;
 use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
@@ -25,6 +26,7 @@ use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -149,6 +151,30 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     }
 
     /**
+     * Увеличить триггерную цену стопа на 0,2% от изначальной
+     * @param LastTwoHoursPriceChangedEvent $event
+     *
+     * @return void
+     */
+    public function moveStopPlusPoint2(LastTwoHoursPriceChangedEvent $event): void
+    {
+        $this->entityManager->wrapInTransaction(function () use ($event) {
+            $lockKey = self::NAME."-position-price-increased-2percent-{$event->position->getId()}";
+            $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+            if ($event->changePercent >= 2 && $lock->acquire()) {
+                $orders = $event->position->getOrders();
+                $buyOrder = $orders->filterBuyOrders()->first();
+                $stopOrder = $orders->filterStopOrders()->first();
+                $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.002', 4);
+                if ($stopOrder->getTriggerPrice() !== $triggerPrice) {
+                    $stopOrder->setTriggerPrice($triggerPrice);
+                    $this->entityManager->persist($stopOrder);
+                }
+            }
+        });
+    }
+
+    /**
      * Выставить приказ на продажу 50% позиции
      * @param LastTwoHoursPriceChangedEvent $event
      *
@@ -217,30 +243,12 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 $this->entityManager->flush();
             }
         });
-    }
-
-    /**
-     * Увеличить триггерную цену стопа на 0,2% от изначальной
-     * @param LastTwoHoursPriceChangedEvent $event
-     *
-     * @return void
-     */
-    public function moveStopPlusPoint2(LastTwoHoursPriceChangedEvent $event): void
-    {
-        $this->entityManager->wrapInTransaction(function () use ($event) {
-            $lockKey = self::NAME."-position-price-increased-2percent-{$event->position->getId()}";
-            $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-            if ($event->changePercent >= 2 && $lock->acquire()) {
-                $orders = $event->position->getOrders();
-                $buyOrder = $orders->filterBuyOrders()->first();
-                $stopOrder = $orders->filterStopOrders()->first();
-                $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.002', 4);
-                if ($stopOrder->getTriggerPrice() !== $triggerPrice) {
-                    $stopOrder->setTriggerPrice($triggerPrice);
-                    $this->entityManager->persist($stopOrder);
-                }
-            }
-        });
+        $now = new \DateTime('now', 'Europe/Moscow');
+        $today1830 = new \DateTime('today 18:30', new \DateTimeZone('Europe/Moscow'));
+        $delay = $today1830->getTimestamp() - $now->getTimestamp();
+        if ($delay) { // Если 18:50 ещё не наступило, то отправляем команду закрытия позиции на это время
+            $this->commandBus->dispatch(new ClosePositionCommand($event->position->getId()), [new DelayStamp($delay * 1000)]);
+        }
     }
 
     /**
@@ -259,7 +267,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         /** @var Position $position */
         foreach ($openedPositions as $position) {
             $twoHours = 7200;
-            /** @var bool $is2HoursExpired Истекло 2 часа от входа в позицию  */
+            /** @var bool $is2HoursExpired Истекло 2 часа от входа в позицию?  */
             $is2HoursExpired = (time() - $position->getCreatedAt()->getTimestamp()) > $twoHours;
             if (!$is2HoursExpired) {
                 $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getByBitCode() . 'USDT');

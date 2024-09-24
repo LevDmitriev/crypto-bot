@@ -17,6 +17,7 @@ framework:
         routing:
             App\Messages\CreateOrderToPositionCommand: async
             App\Messages\EnrichMarketOrderFromByBitCommand: sync
+            App\Messages\ClosePositionCommand: async
 when@test:
     framework:
         messenger:
