@@ -22,7 +22,7 @@ class OrderListener
      *
      * @return void
      */
-    public function closePosition(Order $order)
+    public function closePosition(Order $order): void
     {
         if ($order->getPosition()?->getStrategyName() === CatchPumpStrategy::NAME) {
             if ($order->isStop() && $order->isFilled()) {

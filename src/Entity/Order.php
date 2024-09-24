@@ -23,7 +23,7 @@ class Order
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
-    private ?int $id = null;
+    private ?string $id = null;
 
     #[ORM\Column(length: 255)]
     private ?string $quantity = null;
@@ -254,7 +254,7 @@ class Order
 
     public function getSymbol(): string
     {
-        return $this->getCoin()?->getByBitcode() . 'USDT';
+        return $this->getCoin()?->getByBitCode() . 'USDT';
     }
 
     public function getStopLossPrice(): ?string

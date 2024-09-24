@@ -8,6 +8,7 @@ use App\Entity\Coin;
 use App\Entity\Order\ByBit\OrderFilter;
 use App\Entity\Order\ByBit\Side;
 use App\Entity\Position;
+use App\Entity\Position\Status;
 use App\Factory\OrderFactory;
 use App\Market\Model\CandleCollection;
 use App\Market\Model\CandleInterface;
@@ -15,11 +16,11 @@ use App\Market\Repository\CandleRepositoryInterface;
 use App\Messages\CreateOrderToPositionCommand;
 use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
-use App\TradingStrategy\CatchPump\Event\PositionCanBeOpenedEvent;
 use App\TradingStrategy\CatchPump\Event\PriceIncreased12OrMore;
 use App\TradingStrategy\CatchPump\Event\PriceIncreased13OrMore;
 use App\TradingStrategy\CatchPump\Event\PriceIncreased8OrMore;
 use App\TradingStrategy\TradingStrategyInterface;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -35,7 +36,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
-    public const NAME = 'catch_pump';
+    public const NAME = 'catch-pump';
     public function __construct(
         private readonly Coin                      $coin,
         private readonly EntityManagerInterface    $entityManager,
@@ -54,10 +55,11 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function canOpenPosition(): bool
     {
+        //return true;
         $result = false;
         if (!$this->positionRepository->findOneNotClosedByCoin($this->coin) && $this->positionRepository->getTotalNotClosedCount() < 5) {
             /** @var CandleCollection $candles7hours 7 часовая свечка */
-            $candles7hours = $this->candleRepository->find(symbol: $this->coin->getByBitcode() . 'USDT', interval: '15', limit: 28);
+            $candles7hours = $this->candleRepository->find(symbol: $this->coin->getByBitCode() . 'USDT', interval: '15', limit: 28);
             /** @var CandleCollection $candles7hoursExceptLast15Minutes 7 часовая свечка не включая последние 15 минут */
             $candles7hoursExceptLast15Minutes = new CandleCollection($candles7hours->slice(0, 27));
             /** @var CandleInterface $candleLast15minutes Последняя 15 минутная свечка */
@@ -96,9 +98,9 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $walletBalance = $this->accountRepository->getWalletBalance();
         /** @var string $risk Риск в $ */
         $risk = bcmul('0.01', $walletBalance->totalWalletBallance, $scale);
-        $lastHourCandle = $this->candleRepository->find(symbol: $this->coin->getByBitcode() . 'USDT', interval: '60', limit: 1);
+        $lastHourCandle = $this->candleRepository->find(symbol: $this->coin->getByBitCode() . 'USDT', interval: '60', limit: 1);
         $stopAtr = bcsub($lastHourCandle->getHighestPrice(), $lastHourCandle->getLowestPrice(), $scale);
-        $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getByBitcode() . 'USDT');
+        $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getByBitCode() . 'USDT');
         $stopPrice = bcsub($lastTradedPrice, bcmul($stopAtr, '2', $scale), $scale);
         $stopPercent = bcmul(
             bcdiv(
@@ -232,12 +234,16 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         if ($this->canOpenPosition()) {
             $this->openPosition();
         }
-        $allPositions = $this->positionRepository->findAllNotClosedByCoin($this->coin);
-        foreach ($allPositions as $position) {
+        $criteria = new Criteria();
+        $criteria->andWhere(Criteria::expr()->neq('status', Status::Closed->value));
+        $criteria->andWhere(Criteria::expr()->eq('coin', $this->coin));
+        $criteria->andWhere(Criteria::expr()->eq('strategyName', static::NAME));
+        $openedPositions = $this->positionRepository->matching($criteria);
+        foreach ($openedPositions as $position) {
             /** @var bool $is2HoursExpired Истекло 2 часа от входа в позицию  */
             $is2HoursExpired = (time() - $position->getCreatedAt()->getTimestamp()) > (2*3600);
             if (!$is2HoursExpired) {
-                $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getByBitcode() . 'USDT');
+                $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getByBitCode() . 'USDT');
                 $averagePrice = $position->getAveragePrice();
                 $priceChange = bcdiv($lastTradedPrice, $averagePrice, 2);
                 if (\bccomp($priceChange, '1.08', 2) >= 0) {

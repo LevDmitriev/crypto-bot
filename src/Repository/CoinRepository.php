@@ -16,6 +16,16 @@ class CoinRepository extends ServiceEntityRepository
         parent::__construct($registry, Coin::class);
     }
 
+    /**
+     * Найти по коду ByBit
+     * @param string $byBitCode
+     *
+     * @return Coin|null
+     */
+    public function findByByBitCode(string $byBitCode): ?Coin {
+        return $this->findOneBy(['byBitCode' => $byBitCode]);
+    }
+
     //    /**
     //     * @return Coin[] Returns an array of Coin objects
     //     */

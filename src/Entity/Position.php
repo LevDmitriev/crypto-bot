@@ -34,10 +34,10 @@ class Position
     private string $strategyName;
 
     /**
-     * @var OrderCollection
+     * @var Collection
      */
     #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'position', cascade: ['persist'], orphanRemoval: true)]
-    private OrderCollection $orders;
+    private Collection $orders;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -87,9 +87,9 @@ class Position
             if ($order->isFilled()) {
                 switch ($order->getSide()) {
                     case Side::Buy: $result = bcadd($result, $order->getCumulativeExecutedQuantity(), 6);
-                        break;
+                    break;
                     case Side::Sell: $result = bcsub($result, $order->getCumulativeExecutedQuantity(), 6);
-                        break;
+                    break;
                 }
             }
         }
@@ -133,12 +133,12 @@ class Position
         return $this;
     }
 
-    public function getStrategyName(): string
+    public function getStrategyName() : string
     {
         return $this->strategyName;
     }
 
-    public function setStrategyName(string $strategyName): void
+    public function setStrategyName(string $strategyName) : void
     {
         $this->strategyName = $strategyName;
     }

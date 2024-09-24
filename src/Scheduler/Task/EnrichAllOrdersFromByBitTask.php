@@ -3,18 +3,13 @@
 namespace App\Scheduler\Task;
 
 use App\Entity\Order;
-use App\Entity\Order\ByBit\Side;
 use App\Entity\Order\ByBit\Status as ByBitStatus;
-use App\Factory\OrderFactory;
 use App\Repository\OrderRepository;
-use App\Repository\PositionRepository;
-use App\Scheduler\Message\CloseAllPositionsCommand;
 use ByBit\SDK\ByBitApi;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Scheduler\Attribute\AsCronTask;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
-use Symfony\Component\Workflow\WorkflowInterface;
 
 /**
  * Команда по актуализации статуса всех приказов, которые пока в статусе Новый

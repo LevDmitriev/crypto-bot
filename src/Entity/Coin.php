@@ -15,21 +15,21 @@ class Coin
     private ?string $id = null;
 
     #[ORM\Column(length: 255, nullable: false)]
-    private string $byBitcode;
+    private string $byBitCode;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getByBitcode(): string
+    public function getByBitCode(): string
     {
-        return $this->byBitcode;
+        return $this->byBitCode;
     }
 
-    public function setByBitcode(string $byBitcode): static
+    public function setByBitCode(string $byBitCode): static
     {
-        $this->byBitcode = $byBitcode;
+        $this->byBitCode = $byBitCode;
 
         return $this;
     }

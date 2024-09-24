@@ -37,7 +37,7 @@ readonly class PostUpdateOrderSendToByBitListener
         if ($order->getStatus() === Status::New->value) {
             $orderArray = [
                 'orderLinkId' => (string) $order->getId(),
-                'symbol' => $order->getCoin()->getByBitcode() . 'USDT',
+                'symbol' => $order->getCoin()->getByBitCode() . 'USDT',
                 'category' => $order->getCategory()->value,
             ];
             $changeSet = $this->entityManager->getUnitOfWork()->getEntityChangeSet($order);
