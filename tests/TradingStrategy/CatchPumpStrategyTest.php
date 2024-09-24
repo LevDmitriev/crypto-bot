@@ -3,7 +3,6 @@
 namespace App\Tests\TradingStrategy;
 
 use App\Account\Model\WalletBalance;
-use App\Entity\Coin;
 use App\Entity\Order;
 use App\Entity\Order\ByBit\Type;
 use App\Entity\Position;
@@ -12,12 +11,14 @@ use App\Market\Model\Candle;
 use App\Market\Model\CandleCollection;
 use App\Market\Repository\CandleRepositoryInterface;
 use App\Repository\AccountRepository;
+use App\Repository\CoinRepository;
 use App\Repository\PositionRepository;
-use App\TradingStrategy\CatchPump\Event\PriceIncreased12OrMore;
-use App\TradingStrategy\CatchPump\Event\PriceIncreased8OrMore;
+use App\TradingStrategy\CatchPump\Event\LastTwoHoursPriceChangedEvent;
 use App\TradingStrategy\CatchPump\Strategy\CatchPumpStrategy;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Lock\Store\InMemoryStore;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -27,7 +28,6 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 class CatchPumpStrategyTest extends KernelTestCase
 {
-
     /**
      * Кейс с успешной возможностью открытия позиции
      * @return void
@@ -67,9 +67,9 @@ class CatchPumpStrategyTest extends KernelTestCase
         );
         $candleCollection->add($candlePrevious15minutes);
         $candleCollection->add($candleLast15minutes);
-        $coin = new Coin();
-        $coin->setByBitCode('BTC');
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $coinRepository = self::getContainer()->get(CoinRepository::class);
+        $coin = $coinRepository->findByByBitCode('BTC');
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $positionRepository = $this->createMock(PositionRepository::class);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
@@ -79,6 +79,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             totalWalletBallance: '1000',
             totalAvailableBalance: '300'
         ));
+        $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -88,7 +89,8 @@ class CatchPumpStrategyTest extends KernelTestCase
             dispatcher:         $dispatcher,
             orderFactory:       new OrderFactory(),
             commandBus: $this->createMock(MessageBusInterface::class),
-            positionStateMachine: $this->createMock(WorkflowInterface::class)
+            positionStateMachine: $this->createMock(WorkflowInterface::class),
+            lockFactory: $lockFactory,
         );
         self::assertTrue($strategy->canOpenPosition());
     }
@@ -132,9 +134,9 @@ class CatchPumpStrategyTest extends KernelTestCase
         );
         $candleCollection->add($candlePrevious15minutes);
         $candleCollection->add($candleLast15minutes);
-        $coin = new Coin();
-        $coin->setByBitCode('BTC');
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $coinRepository = self::getContainer()->get(CoinRepository::class);
+        $coin = $coinRepository->findByByBitCode('BTC');
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $positionRepository = $this->createMock(PositionRepository::class);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
         $candleRepository->method('find')->willReturn($candleCollection);
@@ -144,6 +146,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             totalAvailableBalance: '300'
         ));
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -153,7 +156,8 @@ class CatchPumpStrategyTest extends KernelTestCase
             dispatcher:         $dispatcher,
             orderFactory:       new OrderFactory(),
             commandBus: $this->createMock(MessageBusInterface::class),
-            positionStateMachine: $this->createMock(WorkflowInterface::class)
+            positionStateMachine: $this->createMock(WorkflowInterface::class),
+            lockFactory: $lockFactory
         );
         self::assertFalse($strategy->canOpenPosition());
     }
@@ -197,9 +201,9 @@ class CatchPumpStrategyTest extends KernelTestCase
         );
         $candleCollection->add($candlePrevious15minutes);
         $candleCollection->add($candleLast15minutes);
-        $coin = new Coin();
-        $coin->setByBitCode('BTC');
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $coinRepository = self::getContainer()->get(CoinRepository::class);
+        $coin = $coinRepository->findByByBitCode('BTC');
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $positionRepository = $this->createMock(PositionRepository::class);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
         $candleRepository->method('find')->willReturn($candleCollection);
@@ -209,6 +213,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             totalAvailableBalance: '0'
         ));
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -218,7 +223,8 @@ class CatchPumpStrategyTest extends KernelTestCase
             dispatcher:         $dispatcher,
             orderFactory:       new OrderFactory(),
             commandBus: $this->createMock(MessageBusInterface::class),
-            positionStateMachine: $this->createMock(WorkflowInterface::class)
+            positionStateMachine: $this->createMock(WorkflowInterface::class),
+            lockFactory:         $lockFactory
         );
         self::assertFalse($strategy->canOpenPosition());
     }
@@ -262,9 +268,9 @@ class CatchPumpStrategyTest extends KernelTestCase
         );
         $candleCollection->add($candlePrevious15minutes);
         $candleCollection->add($candleLast15minutes);
-        $coin = new Coin();
-        $coin->setByBitCode('BTC');
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $coinRepository = self::getContainer()->get(CoinRepository::class);
+        $coin = $coinRepository->findByByBitCode('BTC');
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $positionRepository = $this->createMock(PositionRepository::class);
         $positionRepository->method('getTotalNotClosedCount')->willReturn(5);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
@@ -275,6 +281,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             totalAvailableBalance: '300'
         ));
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -284,7 +291,8 @@ class CatchPumpStrategyTest extends KernelTestCase
             dispatcher:         $dispatcher,
             orderFactory:       new OrderFactory(),
             commandBus: $this->createMock(MessageBusInterface::class),
-            positionStateMachine: $this->createMock(WorkflowInterface::class)
+            positionStateMachine: $this->createMock(WorkflowInterface::class),
+            lockFactory: $lockFactory
         );
         self::assertFalse($strategy->canOpenPosition());
     }
@@ -328,9 +336,9 @@ class CatchPumpStrategyTest extends KernelTestCase
         );
         $candleCollection->add($candlePrevious15minutes);
         $candleCollection->add($candleLast15minutes);
-        $coin = new Coin();
-        $coin->setByBitCode('BTC');
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $coinRepository = self::getContainer()->get(CoinRepository::class);
+        $coin = $coinRepository->findByByBitCode('BTC');
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $positionRepository = $this->createMock(PositionRepository::class);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
         $candleRepository->method('find')->willReturn($candleCollection);
@@ -340,6 +348,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             totalAvailableBalance: '300'
         ));
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -349,7 +358,8 @@ class CatchPumpStrategyTest extends KernelTestCase
             dispatcher:         $dispatcher,
             orderFactory:       new OrderFactory(),
             commandBus: $this->createMock(MessageBusInterface::class),
-            positionStateMachine: $this->createMock(WorkflowInterface::class)
+            positionStateMachine: $this->createMock(WorkflowInterface::class),
+            lockFactory: $lockFactory
         );
         self::assertFalse($strategy->canOpenPosition());
     }
@@ -373,9 +383,9 @@ class CatchPumpStrategyTest extends KernelTestCase
             );
             $candleCollection->add($candle);
         }
-        $coin = new Coin();
-        $coin->setByBitCode('BTC');
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $coinRepository = self::getContainer()->get(CoinRepository::class);
+        $coin = $coinRepository->findByByBitCode('BTC');
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $positionRepository = $this->createMock(PositionRepository::class);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
         $candleRepository->method('find')->willReturn($candleCollection);
@@ -383,6 +393,7 @@ class CatchPumpStrategyTest extends KernelTestCase
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn($walletBalance);
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -392,7 +403,8 @@ class CatchPumpStrategyTest extends KernelTestCase
             dispatcher:         $dispatcher,
             orderFactory:       new OrderFactory(),
             commandBus: $this->createMock(MessageBusInterface::class),
-            positionStateMachine: $this->createMock(WorkflowInterface::class)
+            positionStateMachine: $this->createMock(WorkflowInterface::class),
+            lockFactory: $lockFactory
         );
         self::assertFalse($strategy->canOpenPosition());
     }
@@ -404,9 +416,9 @@ class CatchPumpStrategyTest extends KernelTestCase
     public function testSell50Percent(): void
     {
         $orderFactory = new OrderFactory();
-        $coin = new Coin();
-        $coin->setByBitCode('BTC');
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $coinRepository = self::getContainer()->get(CoinRepository::class);
+        $coin = $coinRepository->findByByBitCode('BTC');
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $positionRepository = $this->createMock(PositionRepository::class);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
         $accountRepository = $this->createMock(AccountRepository::class);
@@ -419,12 +431,16 @@ class CatchPumpStrategyTest extends KernelTestCase
         ;
         $position = new Position();
         $position->setCoin($coin);
+        $position->setStrategyName(CatchPumpStrategy::NAME);
         $position->addOrder($buyOrder);
         $stopOrder = (new Order())
+            ->setCoin($coin)
+            ->setQuantity('2')
             ->setSide(Order\ByBit\Side::Sell)
             ->setOrderFilter(Order\ByBit\OrderFilter::StopOrder)
             ;
         $position->addOrder($stopOrder);
+        $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -434,9 +450,10 @@ class CatchPumpStrategyTest extends KernelTestCase
             dispatcher:         $dispatcher,
             orderFactory: $orderFactory,
             commandBus: $this->createMock(MessageBusInterface::class),
-            positionStateMachine: $this->createMock(WorkflowInterface::class)
+            positionStateMachine: $this->createMock(WorkflowInterface::class),
+            lockFactory: $lockFactory
         );
-        $strategy->sell50Percent(new PriceIncreased8OrMore($position));
+        $strategy->sell50Percent(new LastTwoHoursPriceChangedEvent($position, 8));
         $order = $position->getOrders()->last();
         self::assertEquals('1.0000', $order->getQuantity());
         self::assertEquals('102.0000', $stopOrder->getTriggerPrice());
@@ -450,9 +467,9 @@ class CatchPumpStrategyTest extends KernelTestCase
     public function testSell25Percent(): void
     {
         $orderFactory = new OrderFactory();
-        $coin = new Coin();
-        $coin->setByBitCode('BTC');
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $coinRepository = self::getContainer()->get(CoinRepository::class);
+        $coin = $coinRepository->findByByBitCode('BTC');
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $positionRepository = $this->createMock(PositionRepository::class);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
         $accountRepository = $this->createMock(AccountRepository::class);
@@ -460,17 +477,21 @@ class CatchPumpStrategyTest extends KernelTestCase
         $buyOrder = new Order();
         $buyOrder->setCoin($coin)
             ->setQuantity('4')
-            ->setAveragePrice('100')
+            ->setAveragePrice('1000')
             ->setSide(Order\ByBit\Side::Buy)
         ;
         $position = new Position();
         $position->setCoin($coin);
+        $position->setStrategyName(CatchPumpStrategy::NAME);
         $position->addOrder($buyOrder);
         $stopOrder = (new Order())
+            ->setCoin($coin)
+            ->setQuantity('2')
             ->setSide(Order\ByBit\Side::Sell)
             ->setOrderFilter(Order\ByBit\OrderFilter::StopOrder)
         ;
         $position->addOrder($stopOrder);
+        $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -480,9 +501,10 @@ class CatchPumpStrategyTest extends KernelTestCase
             dispatcher:         $dispatcher,
             orderFactory: $orderFactory,
             commandBus: $this->createMock(MessageBusInterface::class),
-            positionStateMachine: $this->createMock(WorkflowInterface::class)
+            positionStateMachine: $this->createMock(WorkflowInterface::class),
+            lockFactory: $lockFactory
         );
-        $strategy->sell25Percent(new PriceIncreased12OrMore($position));
+        $strategy->sell25Percent(new LastTwoHoursPriceChangedEvent($position, 12));
         $order = $position->getOrders()->last();
         self::assertEquals('1.0000', $order->getQuantity());
         self::assertEquals('1082.0000', $stopOrder->getTriggerPrice());
@@ -497,9 +519,9 @@ class CatchPumpStrategyTest extends KernelTestCase
     public function testOpenPosition(): void
     {
         $orderFactory = new OrderFactory();
-        $coin = new Coin();
-        $coin->setByBitCode('BTC');
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $coinRepository = self::getContainer()->get(CoinRepository::class);
+        $coin = $coinRepository->findByByBitCode('BTC');
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $positionRepository = $this->createMock(PositionRepository::class);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
         $candleRepository->method('getLastTradedPrice')->willReturn('102');
@@ -517,6 +539,7 @@ class CatchPumpStrategyTest extends KernelTestCase
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn($walletBalance);
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
             coin:               $coin,
             entityManager:      $entityManager,
@@ -526,7 +549,8 @@ class CatchPumpStrategyTest extends KernelTestCase
             dispatcher:         $dispatcher,
             orderFactory: $orderFactory,
             commandBus: $this->createMock(MessageBusInterface::class),
-            positionStateMachine: $this->createMock(WorkflowInterface::class)
+            positionStateMachine: $this->createMock(WorkflowInterface::class),
+            lockFactory: $lockFactory
         );
         $position = $strategy->openPosition();
         $buyOrder = $position->getOrders()->first();

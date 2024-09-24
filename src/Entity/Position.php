@@ -37,6 +37,7 @@ class Position
      * @var Collection
      */
     #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'position', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['createdAt' => 'ASC'])]
     private Collection $orders;
 
     #[ORM\ManyToOne]
@@ -99,7 +100,7 @@ class Position
     /**
      * @return OrderCollection
      */
-    public function getOrders(): OrderCollection
+    public function getOrders(): Collection
     {
         return $this->orders;
     }

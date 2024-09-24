@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace App\MessageHandler;
 
 use App\Entity\Order;
-use App\Entity\Order\ByBit\OrderFilter;
 use App\Entity\Order\ByBit\Status as ByBitStatus;
-use App\Entity\Order\Status;
 use App\Messages\EnrichMarketOrderFromByBitCommand;
 use App\Repository\OrderRepository;
-use App\Repository\PositionRepository;
 use ByBit\SDK\ByBitApi;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;

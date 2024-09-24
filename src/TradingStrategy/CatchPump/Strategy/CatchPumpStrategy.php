@@ -156,28 +156,21 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function sell50Percent(LastTwoHoursPriceChangedEvent $event): void
     {
-        $lockKey = self::NAME."-position-price-increased-8percent-{$event->position->getId()}";
-        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-        if ($event->changePercent > 8 && $lock->acquire()) {
-            $orders = $event->position->getOrders();
-            $buyOrder = $orders->filterBuyOrders()->first();
-            $quantityForSale = bcdiv($buyOrder->getQuantity(), '2', 4);
-            $isAlreadyHaveSellOrder = (bool) $orders
-                ->filterSellOrders()
-                ->filterCommonOrders()
-                ->filterMarketOrders()
-                ->filterByQuantity($quantityForSale)
-                ->count()
-            ;
-            if (!$isAlreadyHaveSellOrder && $stopOrder = $orders->filterStopOrders()->first()) {
+        $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($event) {
+            $lockKey = self::NAME."-position-price-increased-8percent-{$event->position->getId()}";
+            $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+            if ($event->changePercent >= 8 && $lock->acquire()) {
+                $orders = $event->position->getOrders();
+                $buyOrder = $orders->filterBuyOrders()->first();
+                $quantityForSale = bcdiv($buyOrder->getQuantity(), '2', 4);
+                $stopOrder = $orders->filterStopOrders()->first();
                 $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.02', 4));
                 $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
                 $event->position->addOrder($order);
-                $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($event) {
-                    $entityManager->persist($event->position);
-                });
+                $entityManager->persist($event->position);
             }
-        }
+        });
+
     }
     /**
      * Выставить приказ на продажу 25% позиции
@@ -187,28 +180,20 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function sell25Percent(LastTwoHoursPriceChangedEvent $event): void
     {
-        $lockKey = self::NAME."-position-price-increased-12percent-{$event->position->getId()}";
-        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-        if ($event->changePercent > 12 && $lock->acquire()) {
-            $orders = $event->position->getOrders();
-            $buyOrder = $orders->filterBuyOrders()->first();
-            $quantityForSale = bcdiv($buyOrder->getQuantity(), '4', 4);
-            $isAlreadyHaveSellOrder = (bool) $orders
-                ->filterSellOrders()
-                ->filterCommonOrders()
-                ->filterMarketOrders()
-                ->filterByQuantity($quantityForSale)
-                ->count()
-            ;
-            if (!$isAlreadyHaveSellOrder && $stopOrder = $orders->filterStopOrders()->first()) {
+        $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($event) {
+            $lockKey = self::NAME."-position-price-increased-12percent-{$event->position->getId()}";
+            $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+            if ($event->changePercent >= 12 && $lock->acquire()) {
+                $orders = $event->position->getOrders();
+                $buyOrder = $orders->filterBuyOrders()->first();
+                $quantityForSale = bcdiv($buyOrder->getQuantity(), '4', 4);
+                $stopOrder = $orders->filterStopOrders()->first();
                 $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.082', 4));
                 $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
                 $event->position->addOrder($order);
-                $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($event) {
-                    $entityManager->persist($event->position);
-                });
+                $entityManager->persist($event->position);
             }
-        }
+        });
     }
 
     /**
@@ -219,19 +204,19 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function moveStopPlus10point2(LastTwoHoursPriceChangedEvent $event): void
     {
-        $lockKey = self::NAME."-position-price-increased-13percent-{$event->position->getId()}";
-        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-        if ($event->changePercent > 13 && $lock->acquire()) {
-            $orders = $event->position->getOrders();
-            $buyOrder = $orders->filterBuyOrders()->first();
-            $stopOrder = $orders->filterStopOrders()->first();
-            $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.102', 4);
-            if ($stopOrder->getTriggerPrice() !== $triggerPrice) {
+        $this->entityManager->wrapInTransaction(function () use ($event) {
+            $lockKey = self::NAME."-position-price-increased-13percent-{$event->position->getId()}";
+            $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+            if ($event->changePercent >= 13 && $lock->acquire()) {
+                $orders = $event->position->getOrders();
+                $buyOrder = $orders->filterBuyOrders()->first();
+                $stopOrder = $orders->filterStopOrders()->first();
+                $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.102', 4);
                 $stopOrder->setTriggerPrice($triggerPrice);
                 $this->entityManager->persist($stopOrder);
                 $this->entityManager->flush();
             }
-        }
+        });
     }
 
     /**
@@ -242,19 +227,20 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function moveStopPlusPoint2(LastTwoHoursPriceChangedEvent $event): void
     {
-        $lockKey = self::NAME."-position-price-increased-2percent-{$event->position->getId()}";
-        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-        if ($event->changePercent > 2 && $lock->acquire()) {
-            $orders = $event->position->getOrders();
-            $buyOrder = $orders->filterBuyOrders()->first();
-            $stopOrder = $orders->filterStopOrders()->first();
-            $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.002', 4);
-            if ($stopOrder->getTriggerPrice() !== $triggerPrice) {
-                $stopOrder->setTriggerPrice($triggerPrice);
-                $this->entityManager->persist($stopOrder);
-                $this->entityManager->flush();
+        $this->entityManager->wrapInTransaction(function () use ($event) {
+            $lockKey = self::NAME."-position-price-increased-2percent-{$event->position->getId()}";
+            $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+            if ($event->changePercent >= 2 && $lock->acquire()) {
+                $orders = $event->position->getOrders();
+                $buyOrder = $orders->filterBuyOrders()->first();
+                $stopOrder = $orders->filterStopOrders()->first();
+                $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.002', 4);
+                if ($stopOrder->getTriggerPrice() !== $triggerPrice) {
+                    $stopOrder->setTriggerPrice($triggerPrice);
+                    $this->entityManager->persist($stopOrder);
+                }
             }
-        }
+        });
     }
 
     /**
