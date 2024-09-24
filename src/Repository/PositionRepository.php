@@ -25,7 +25,7 @@ class PositionRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('p')
             ->select('COUNT(p)')
             ->andWhere('p.status <> :status')
-            ->setParameter('status', Status::Closed)
+            ->setParameter('status', Status::Closed->value)
             ->getQuery()
             ->getSingleScalarResult();
     }
@@ -52,13 +52,11 @@ class PositionRepository extends ServiceEntityRepository
 
     public function findOneNotClosedByCoin(Coin $coin): ?Position
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.coin = :coin')
-            ->andWhere('p.status <> :status')
-            ->setParameter('coin', $coin)
-            ->setParameter('status', Status::Closed->value)
-            ->getQuery()
-            ->getOneOrNullResult();
+        $criteria = new Criteria();
+        $criteria->andWhere(Criteria::expr()->neq('status', Status::Closed->value));
+        $criteria->andWhere(Criteria::expr()->eq('coin', $coin->getId()));
+        $criteria->setMaxResults(1);
+        return $this->matching($criteria)->first();
     }
 
     /**
@@ -70,6 +68,20 @@ class PositionRepository extends ServiceEntityRepository
     public function findAllByCoin(Coin $coin): array
     {
         return parent::findBy(['coin' => $coin->getId()]);
+    }
+    /**
+     * Найти все не закрытые позиции монеты
+     * @param Coin $coin Монета
+     *
+     * @return Collection
+     */
+    public function findAllNotClosedByCoin(Coin $coin): Collection
+    {
+        $criteria = new Criteria();
+        $criteria->andWhere(Criteria::expr()->neq('status', Status::Closed->value));
+        $criteria->andWhere(Criteria::expr()->eq('coin', $coin->getId()));
+
+        return $this->matching($criteria);
     }
     //    /**
     //     * @return Position[] Returns an array of Position objects

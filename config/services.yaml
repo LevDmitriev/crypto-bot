@@ -21,7 +21,8 @@ services:
             - '../src/Bybit/'
             - '../src/**/Message/'
             - '../src/**/Model'
-            - '../src/TradingStrategy/'
+            - '../src/TradingStrategy/**/Strategy'
+            - '../src/TradingStrategy/**/Event'
             - '../src/Kernel.php'
     ByBit\SDK\ByBitApi:
         arguments:

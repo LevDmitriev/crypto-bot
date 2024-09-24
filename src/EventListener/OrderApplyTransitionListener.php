@@ -23,7 +23,7 @@ class OrderApplyTransitionListener
     public function applyTransition(Order $order): void
     {
         match ($order->getByBitStatus()) {
-            Status::PartiallyFilledCanceled, Status::Filled => $this->orderStateMachine->can($order, 'fill') && $this->orderStateMachine->apply($order, 'fill'),
+            Status::PartiallyFilledCanceled, Status::Filled, Status::Triggered => $this->orderStateMachine->can($order, 'fill') && $this->orderStateMachine->apply($order, 'fill'),
             Status::Cancelled, Status::Deactivated => $this->orderStateMachine->can($order, 'cancel') && $this->orderStateMachine->apply($order, 'cancel')
         };
     }

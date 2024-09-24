@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Bridge\Doctrine\Types\UuidType;
 
 #[ORM\Table(name: 'positions')]
 #[ORM\Entity(repositoryClass: PositionRepository::class)]
@@ -17,28 +18,33 @@ class Position
     use TimestampableEntity;
     public function __construct()
     {
-        $this->orders = new ArrayCollection();
+        $this->orders = new OrderCollection();
     }
 
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    private ?string $id = null;
 
     #[ORM\Column(length: 255, nullable: false)]
     private ?string $status = Status::New->value;
 
+    #[ORM\Column(length: 255, nullable: false)]
+    private string $strategyName;
+
     /**
-     * @var Collection<int, Order>
+     * @var OrderCollection
      */
     #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'position', cascade: ['persist'], orphanRemoval: true)]
-    private Collection $orders;
+    private OrderCollection $orders;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     private ?Coin $coin = null;
 
-    public function getId(): ?int
+
+    public function getId(): ?string
     {
         return $this->id;
     }
@@ -81,9 +87,9 @@ class Position
             if ($order->isFilled()) {
                 switch ($order->getSide()) {
                     case Side::Buy: $result = bcadd($result, $order->getCumulativeExecutedQuantity(), 6);
-                    break;
+                        break;
                     case Side::Sell: $result = bcsub($result, $order->getCumulativeExecutedQuantity(), 6);
-                    break;
+                        break;
                 }
             }
         }
@@ -91,9 +97,9 @@ class Position
     }
 
     /**
-     * @return Collection<int, Order>
+     * @return OrderCollection
      */
-    public function getOrders(): Collection
+    public function getOrders(): OrderCollection
     {
         return $this->orders;
     }
@@ -125,5 +131,15 @@ class Position
         $this->coin = $coin;
 
         return $this;
+    }
+
+    public function getStrategyName(): string
+    {
+        return $this->strategyName;
+    }
+
+    public function setStrategyName(string $strategyName): void
+    {
+        $this->strategyName = $strategyName;
     }
 }

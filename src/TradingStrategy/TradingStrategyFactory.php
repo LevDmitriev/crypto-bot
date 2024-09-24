@@ -9,11 +9,9 @@ use App\Factory\OrderFactory;
 use App\Market\Repository\CandleRepositoryInterface;
 use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
-use App\TradingStrategy\CatchPump\CatchPumpStrategy;
-use ByBit\SDK\ByBitApi;
+use App\TradingStrategy\CatchPump\Strategy\CatchPumpStrategy;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -37,7 +35,7 @@ class TradingStrategyFactory implements TradingStrategyFactoryInterface
     public function create(string $name, Coin $coin): TradingStrategyInterface
     {
         return match ($name) {
-            "catch-pump" => new CatchPumpStrategy(
+            CatchPumpStrategy::NAME => new CatchPumpStrategy(
                 coin:                 $coin,
                 entityManager:        $this->entityManager,
                 candleRepository:     $this->candleRepository,

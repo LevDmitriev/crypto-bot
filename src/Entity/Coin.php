@@ -12,24 +12,24 @@ class Coin
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private ?string $id = null;
 
     #[ORM\Column(length: 255, nullable: false)]
-    private string $code;
+    private string $byBitcode;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getCode(): string
+    public function getByBitcode(): string
     {
-        return $this->code;
+        return $this->byBitcode;
     }
 
-    public function setCode(string $code): static
+    public function setByBitcode(string $byBitcode): static
     {
-        $this->code = $code;
+        $this->byBitcode = $byBitcode;
 
         return $this;
     }

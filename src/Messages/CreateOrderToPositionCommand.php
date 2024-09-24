@@ -14,7 +14,7 @@ use App\Entity\Order\ByBit\Type;
 readonly class CreateOrderToPositionCommand
 {
     public function __construct(
-        public int $positionId,
+        public string $positionId,
         public int $coinId,
         public ?string $quantity = null,
         public ?string $price = null,

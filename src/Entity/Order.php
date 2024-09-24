@@ -20,11 +20,9 @@ class Order
 {
     use TimestampableEntity;
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    //#[ORM\Column(type: UuidType::NAME, unique: true)]
-    //#[ORM\GeneratedValue(strategy: 'CUSTOM')]
-    //#[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    #[ORM\Column(type: UuidType::NAME, unique: true)]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
@@ -101,7 +99,7 @@ class Order
     #[ORM\JoinColumn(nullable: false)]
     private ?Position $position = null;
 
-    public function getId(): ?int
+    public function getId(): ?string
     {
         return $this->id;
     }
@@ -256,7 +254,7 @@ class Order
 
     public function getSymbol(): string
     {
-        return $this->getCoin()?->getCode() . 'USDT';
+        return $this->getCoin()?->getByBitcode() . 'USDT';
     }
 
     public function getStopLossPrice(): ?string
