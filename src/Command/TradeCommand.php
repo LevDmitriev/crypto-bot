@@ -27,7 +27,9 @@ class TradeCommand extends Command
     }
     protected function configure()
     {
-        $this->addArgument('strategy', InputArgument::REQUIRED);
+        $this->addArgument('strategy', InputArgument::REQUIRED)
+            ->setDescription("Запустить торговлю всеми монетами по указанной стратегии")
+        ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
