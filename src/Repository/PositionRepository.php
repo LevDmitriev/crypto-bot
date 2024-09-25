@@ -62,7 +62,7 @@ class PositionRepository extends ServiceEntityRepository
         $criteria->andWhere(Criteria::expr()->neq('status', Status::Closed->value));
         $criteria->andWhere(Criteria::expr()->eq('coin', $coin));
         $criteria->setMaxResults(1);
-        return $this->matching($criteria)->first() ?? null;
+        return $this->matching($criteria)->first() ?: null;
     }
 
     /**
