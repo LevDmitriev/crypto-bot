@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\TradingStrategy\CatchPump\Strategy;
 
 use App\Entity\Coin;
+use App\Entity\Order;
 use App\Entity\Order\ByBit\OrderFilter;
 use App\Entity\Order\ByBit\Side;
 use App\Entity\Position;
@@ -19,6 +20,7 @@ use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
 use App\TradingStrategy\CatchPump\Event\LastTwoHoursPriceChangedEvent;
 use App\TradingStrategy\TradingStrategyInterface;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -188,7 +190,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             if ($event->changePercent >= 8 && $lock->acquire()) {
                 $orders = $event->position->getOrders();
                 $buyOrder = $orders->filterBuyOrders()->first();
-                $quantityForSale = bcdiv($buyOrder->getQuantity(), '2', 4);
+                $quantityForSale = bcdiv($buyOrder->getCumulativeExecutedQuantity(), '2', 4);
                 $stopOrder = $orders->filterStopOrders()->first();
                 $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.02', 4));
                 $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
@@ -244,8 +246,8 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             }
         });
         $now = new \DateTime('now', 'Europe/Moscow');
-        $today1830 = new \DateTime('today 18:30', new \DateTimeZone('Europe/Moscow'));
-        $delay = $today1830->getTimestamp() - $now->getTimestamp();
+        $today1850 = new \DateTime('today 18:50', new \DateTimeZone('Europe/Moscow'));
+        $delay = $today1850->getTimestamp() - $now->getTimestamp();
         if ($delay) { // Если 18:50 ещё не наступило, то отправляем команду закрытия позиции на это время
             $this->commandBus->dispatch(new ClosePositionCommand($event->position->getId()), [new DelayStamp($delay * 1000)]);
         }

@@ -26,18 +26,19 @@ class TradeCommand extends Command
     protected function configure()
     {
         $this->addOption('strategy', 's', mode: InputOption::VALUE_REQUIRED);
-        $this->addOption('coin-bybit-code', 'c', mode: InputOption::VALUE_REQUIRED);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $byBitCode = $input->getOption('coin-bybit-code');
-        $coin = $this->coinRepository->findByByBitCode($byBitCode);
-        $strategy = $this->tradingStrategyFactory->create($input->getOption('strategy'), $coin);
-        //$strategy->dispatchEvents();
-        //return self::SUCCESS;
+        $coins = $this->coinRepository->findAll();
+        $strategies = [];
+        foreach ($coins as $coin) {
+            $strategies[] = $this->tradingStrategyFactory->create($input->getOption('strategy'), $coin);
+        }
         while (true) {
-            $strategy->dispatchEvents();
+            foreach ($strategies as $strategy) {
+                $strategy->dispatchEvents();
+            }
             sleep(60);
         }
 

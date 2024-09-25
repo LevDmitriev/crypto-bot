@@ -351,4 +351,39 @@ class Order
     {
         return $this->getStatus() === Status::New->value;
     }
+
+    public function __toString(): string
+    {
+        $result = [];
+        $result[] = match ($this->getSide()) {
+            Side::Buy => 'Покупка',
+            Side::Sell => 'Продажа',
+        };
+        $result[] = match ($this->getOrderFilter()) {
+            OrderFilter::StopOrder => 'стоп',
+            OrderFilter::tpslOrder => 'TP/SL',
+            default => ''
+        };
+
+        switch ($this->getSide()) {
+            case Side::Buy:
+                $result[] = "{$this->getCumulativeExecutedQuantity()} {$this->getCoin()->getByBitCode()} за {$this->getQuantity()} USDT";
+                break;
+            case Side::Sell:
+                $result[] = "{$this->getQuantity()} {$this->getCoin()->getByBitCode()}";
+                if ($this->getOrderFilter() === OrderFilter::StopOrder) {
+                    $result[] = "по цене {$this->getTriggerPrice()}";
+                }
+                break;
+        }
+
+        $result[] = match ($this->getType()) {
+            Type::Market => 'по рынку',
+            Type::Limit => 'лимитный',
+            default => ''
+        };
+
+
+        return implode(' ', $result);
+    }
 }

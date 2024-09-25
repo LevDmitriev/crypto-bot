@@ -143,4 +143,9 @@ class Position
     {
         $this->strategyName = $strategyName;
     }
+
+    public function __toString(): string
+    {
+        return $this->id;
+    }
 }

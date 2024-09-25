@@ -7,4 +7,6 @@ return [
     Symfony\Bundle\MakerBundle\MakerBundle::class => ['dev' => true],
     Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle::class => ['all' => true],
     Symfony\Bundle\SecurityBundle\SecurityBundle::class => ['all' => true],
+    Symfony\Bundle\TwigBundle\TwigBundle::class => ['all' => true],
+    EasyCorp\Bundle\EasyAdminBundle\EasyAdminBundle::class => ['all' => true],
 ];

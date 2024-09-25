@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\CoinRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Table(name: 'coins')]
 #[ORM\Entity(repositoryClass: CoinRepository::class)]
@@ -14,6 +15,7 @@ class Coin
     #[ORM\Column]
     private ?string $id = null;
 
+    #[Assert\Unique]
     #[ORM\Column(length: 255, nullable: false)]
     private string $byBitCode;
 
@@ -32,5 +34,9 @@ class Coin
         $this->byBitCode = $byBitCode;
 
         return $this;
+    }
+    public function __toString(): string
+    {
+        return $this->byBitCode;
     }
 }
