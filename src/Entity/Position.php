@@ -40,7 +40,7 @@ class Position
     #[ORM\OrderBy(['createdAt' => 'ASC'])]
     private Collection $orders;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(cascade: ['persist'])]
     #[ORM\JoinColumn(nullable: false)]
     private ?Coin $coin = null;
 
@@ -88,9 +88,9 @@ class Position
             if ($order->isFilled()) {
                 switch ($order->getSide()) {
                     case Side::Buy: $result = bcadd($result, $order->getCumulativeExecutedQuantity(), 6);
-                    break;
+                        break;
                     case Side::Sell: $result = bcsub($result, $order->getCumulativeExecutedQuantity(), 6);
-                    break;
+                        break;
                 }
             }
         }
@@ -134,12 +134,12 @@ class Position
         return $this;
     }
 
-    public function getStrategyName() : string
+    public function getStrategyName(): string
     {
         return $this->strategyName;
     }
 
-    public function setStrategyName(string $strategyName) : void
+    public function setStrategyName(string $strategyName): void
     {
         $this->strategyName = $strategyName;
     }

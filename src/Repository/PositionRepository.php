@@ -50,6 +50,12 @@ class PositionRepository extends ServiceEntityRepository
     }
 
 
+    /**
+     * Найти одну незакрытую позицию по монете
+     * @param Coin $coin
+     *
+     * @return Position|null
+     */
     public function findOneNotClosedByCoin(Coin $coin): ?Position
     {
         $criteria = new Criteria();
@@ -59,16 +65,6 @@ class PositionRepository extends ServiceEntityRepository
         return $this->matching($criteria)->first();
     }
 
-    /**
-     * Найти все позиции
-     * @param Coin $coin Монета
-     *
-     * @return array
-     */
-    public function findAllByCoin(Coin $coin): array
-    {
-        return parent::findBy(['coin' => $coin->getId()]);
-    }
     /**
      * Найти все не закрытые позиции монеты
      * @param Coin $coin Монета

@@ -3,11 +3,8 @@
 namespace App\Scheduler\Task;
 
 use App\Entity\Order\ByBit\Category;
-use App\Entity\Order\ByBit\Side;
-use App\Factory\OrderFactory;
 use App\Repository\PositionRepository;
 use ByBit\SDK\ByBitApi;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Scheduler\Attribute\AsCronTask;
 use Symfony\Component\Workflow\WorkflowInterface;
 

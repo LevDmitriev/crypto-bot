@@ -22,7 +22,8 @@ class CoinRepository extends ServiceEntityRepository
      *
      * @return Coin|null
      */
-    public function findByByBitCode(string $byBitCode): ?Coin {
+    public function findByByBitCode(string $byBitCode): ?Coin
+    {
         return $this->findOneBy(['byBitCode' => $byBitCode]);
     }
 

@@ -14,7 +14,8 @@ class ClosePositionCommandHandler
     public function __construct(
         private readonly WorkflowInterface $positionStateMachine,
         private readonly PositionRepository $positionRepository,
-    ) { }
+    ) {
+    }
 
     public function __invoke(ClosePositionCommand $command): void
     {

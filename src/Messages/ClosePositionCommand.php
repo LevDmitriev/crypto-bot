@@ -7,5 +7,7 @@ namespace App\Messages;
  */
 class ClosePositionCommand
 {
-    public function __construct(public readonly string $positionId) { }
+    public function __construct(public readonly string $positionId)
+    {
+    }
 }
