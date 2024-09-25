@@ -4,10 +4,11 @@ namespace App\Entity;
 
 use App\Repository\CoinRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Table(name: 'coins')]
 #[ORM\Entity(repositoryClass: CoinRepository::class)]
+#[UniqueEntity(['byBitCode'])]
 class Coin
 {
     #[ORM\Id]
@@ -15,7 +16,6 @@ class Coin
     #[ORM\Column]
     private ?string $id = null;
 
-    #[Assert\Unique]
     #[ORM\Column(length: 255, nullable: false)]
     private string $byBitCode;
 

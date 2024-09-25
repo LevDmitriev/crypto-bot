@@ -32,9 +32,9 @@ class TradeCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $coins = $this->coinRepository->findAll();
-        $strategies = array_map(fn (Coin $coin) => $this->tradingStrategyFactory->create($input->getArgument('strategy'), $coin), $coins);
         while (true) {
+            $coins = $this->coinRepository->findAll();
+            $strategies = array_map(fn (Coin $coin) => $this->tradingStrategyFactory->create($input->getArgument('strategy'), $coin), $coins);
             foreach ($strategies as $strategy) {
                 $strategy->dispatchEvents();
             }

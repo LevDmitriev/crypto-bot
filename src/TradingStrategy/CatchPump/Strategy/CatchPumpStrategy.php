@@ -83,15 +83,15 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             */
             $walletBalance = $this->accountRepository->getWalletBalance();
             $coinsAbleToBuy = \bcdiv($walletBalance->totalAvailableBalance, $candleLast15minutes->getClosePrice(), 4);
-            $this->logger?->debug("Объём изменился на $volumeChangePercent%");
-            $this->logger?->debug("Цена изменилась на $priceChangePercent%");
-            $this->logger?->debug("На балансе доступно {$walletBalance->totalAvailableBalance} USDT");
-            $this->logger?->debug("Можно купить $coinsAbleToBuy BTC");
+            $this->logger?->info("Объём изменился на $volumeChangePercent%");
+            $this->logger?->info("Цена изменилась на $priceChangePercent%");
+            $this->logger?->info("На балансе доступно {$walletBalance->totalAvailableBalance} USDT");
+            $this->logger?->info("Можно купить $coinsAbleToBuy BTC");
             $result = \bccomp($volumeChangePercent, "30", 0) >= 0
             && \bccomp($priceChangePercent, '2', 0) >= 0
             && $coinsAbleToBuy >= '0.0001'
             ;
-            $result ? $this->logger?->debug("Позиция может быть открыта") : null;
+            $result ? $this->logger?->info("Позиция может быть открыта") : null;
         }
         return $result;
     }

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Coin;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
@@ -15,14 +16,11 @@ class CoinCrudController extends AbstractCrudController
         return Coin::class;
     }
 
-    /*
     public function configureFields(string $pageName): iterable
     {
         return [
-            IdField::new('id'),
-            TextField::new('title'),
-            TextEditorField::new('description'),
+            IdField::new('id')->hideOnForm(),
+            TextField::new('byBitCode', "Код в ByBit"),
         ];
     }
-    */
 }
