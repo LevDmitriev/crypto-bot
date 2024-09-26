@@ -9,6 +9,7 @@ use App\Entity\Coin;
 use App\Repository\CoinRepository;
 use App\TradingStrategy\TradingStrategyFactoryInterface;
 use ByBit\SDK\Exceptions\HttpException;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -22,6 +23,7 @@ class TradeCommand extends Command
     public function __construct(
         private readonly TradingStrategyFactoryInterface $tradingStrategyFactory,
         private readonly CoinRepository $coinRepository,
+        private readonly EntityManagerInterface $entityManager,
     ) {
         parent::__construct('app:trade');
     }
@@ -45,6 +47,7 @@ class TradeCommand extends Command
                             throw $exception;
                         }
                     }
+                    $this->entityManager->clear();
                 }
                 sleep(60);
         }
