@@ -70,7 +70,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $candleLast15minutes = new CandleCollection($candles7hours->slice(27, 1));
             /** @var CandleInterface $candlePrevious15minutes Предыдущая 15 минутная свечка */
             $candlePrevious15minutes = new CandleCollection($candles7hours->slice(26, 1));
-            if ($candlePrevious15minutes->getVolume() && $candles7hoursExceptLast15Minutes->getHighestPrice()) {
+            if ($candlePrevious15minutes->getVolume() !== '0' && $candles7hoursExceptLast15Minutes->getHighestPrice() !== '0') {
                 /** @var string $priceChangePercent Изменение цены */
                 $priceChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getClosePrice(), $candles7hoursExceptLast15Minutes->getHighestPrice(), 2), '1', 2), '100', 0);
                 $volumeChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getVolume(), $candlePrevious15minutes->getVolume(), 2), '1', 2), '100', 0);
