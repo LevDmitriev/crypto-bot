@@ -70,28 +70,30 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $candleLast15minutes = new CandleCollection($candles7hours->slice(27, 1));
             /** @var CandleInterface $candlePrevious15minutes Предыдущая 15 минутная свечка */
             $candlePrevious15minutes = new CandleCollection($candles7hours->slice(26, 1));
-            /** @var string $priceChangePercent Изменение цены */
-            $priceChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getClosePrice(), $candles7hoursExceptLast15Minutes->getHighestPrice(), 2), '1', 2), '100', 0);
-            $volumeChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getVolume(), $candlePrevious15minutes->getVolume(), 2), '1', 2), '100', 0);
-            /*
-            * Открываем позицию если:
-            * - по монете нет открытой позиции
-            * - по монете нет открытой позиции
-            * - объём торгов увеличился на 30% и более
-            * - цена увеличилась на 2% и более
-            * - Депозита хватает, чтобы купить хотя бы 0.0001 монету(Ограничение API)
-            */
-            $walletBalance = $this->accountRepository->getWalletBalance();
-            $coinsAbleToBuy = \bcdiv($walletBalance->totalAvailableBalance, $candleLast15minutes->getClosePrice(), 4);
-            $this->logger?->info("Объём изменился на $volumeChangePercent%");
-            $this->logger?->info("Цена изменилась на $priceChangePercent%");
-            $this->logger?->info("На балансе доступно {$walletBalance->totalAvailableBalance} USDT");
-            $this->logger?->info("Можно купить $coinsAbleToBuy BTC");
-            $result = \bccomp($volumeChangePercent, "30", 0) >= 0
-            && \bccomp($priceChangePercent, '2', 0) >= 0
-            && $coinsAbleToBuy >= '0.0001'
-            ;
-            $result ? $this->logger?->info("Позиция может быть открыта") : null;
+            if ($candleLast15minutes->getVolume() && $candlePrevious15minutes->getVolume()) {
+                /** @var string $priceChangePercent Изменение цены */
+                $priceChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getClosePrice(), $candles7hoursExceptLast15Minutes->getHighestPrice(), 2), '1', 2), '100', 0);
+                $volumeChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getVolume(), $candlePrevious15minutes->getVolume(), 2), '1', 2), '100', 0);
+                /*
+                * Открываем позицию если:
+                * - по монете нет открытой позиции
+                * - по монете нет открытой позиции
+                * - объём торгов увеличился на 30% и более
+                * - цена увеличилась на 2% и более
+                * - Депозита хватает, чтобы купить хотя бы 0.0001 монету(Ограничение API)
+                */
+                $walletBalance = $this->accountRepository->getWalletBalance();
+                $coinsAbleToBuy = \bcdiv($walletBalance->totalAvailableBalance, $candleLast15minutes->getClosePrice(), 4);
+                $this->logger?->info("Объём изменился на $volumeChangePercent%");
+                $this->logger?->info("Цена изменилась на $priceChangePercent%");
+                $this->logger?->info("На балансе доступно {$walletBalance->totalAvailableBalance} USDT");
+                $this->logger?->info("Можно купить $coinsAbleToBuy BTC");
+                $result = \bccomp($volumeChangePercent, "30", 0) >= 0
+                          && \bccomp($priceChangePercent, '2', 0) >= 0
+                          && $coinsAbleToBuy >= '0.0001'
+                ;
+                $result ? $this->logger?->info("Позиция может быть открыта") : null;
+            }
         }
         return $result;
     }
