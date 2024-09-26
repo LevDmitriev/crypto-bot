@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Bybit\ErrorCodes;
 use App\Entity\Coin;
 use App\Repository\CoinRepository;
 use App\TradingStrategy\TradingStrategyFactoryInterface;
+use ByBit\SDK\Exceptions\HttpException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -33,12 +35,18 @@ class TradeCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         while (true) {
-            $coins = $this->coinRepository->findAll();
-            $strategies = array_map(fn (Coin $coin) => $this->tradingStrategyFactory->create($input->getArgument('strategy'), $coin), $coins);
-            foreach ($strategies as $strategy) {
-                $strategy->dispatchEvents();
-            }
-            sleep(60);
+                $coins = $this->coinRepository->findAll();
+                $strategies = array_map(fn (Coin $coin) => $this->tradingStrategyFactory->create($input->getArgument('strategy'), $coin), $coins);
+                foreach ($strategies as $strategy) {
+                    try {
+                        $strategy->dispatchEvents();
+                    } catch (HttpException $exception) {
+                        if ($exception->getCode() !== ErrorCodes::NOT_SUPPORTED_SYMBOLS) {
+                            throw $exception;
+                        }
+                    }
+                }
+                sleep(60);
         }
 
         return self::SUCCESS;

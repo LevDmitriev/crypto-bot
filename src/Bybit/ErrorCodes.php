@@ -8,5 +8,6 @@ namespace App\Bybit;
  */
 class ErrorCodes
 {
+    public const NOT_SUPPORTED_SYMBOLS = 10001;
     public const ORDER_DOES_NOT_EXISTS = 170213;
 }
