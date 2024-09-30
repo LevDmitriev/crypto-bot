@@ -49,7 +49,7 @@ class TradeCommand extends Command
                     }
                     $this->entityManager->clear();
                 }
-                sleep(60*15);
+                sleep(60);
         }
 
         return self::SUCCESS;
