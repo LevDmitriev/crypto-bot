@@ -85,34 +85,6 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 */
                 $walletBalance = $this->accountRepository->getWalletBalance();
                 $coinsAbleToBuy = \bcdiv($walletBalance->totalAvailableBalance, $candleLast15minutes->getClosePrice(), 4);
-                $resource = fopen("/app/log.log", 'a');
-
-                //$log = [
-                //    date('Y-m-d H:i:s'),
-                //    $this->coin->getByBitCode(),
-                //    "Цена закрытия свечи за последние 15 минут {$candleLast15minutes->getClosePrice()}",
-                //    "Самая высокая цена за последние 7 часов без последних 15 минут {$candles7hoursExceptLast15Minutes->getHighestPrice()}",
-                //    "Цена изменилась на $priceChangePercent%",
-                //    "Объём торгов за последние 15 минут {$candleLast15minutes->getVolume()}",
-                //    "Объём торгов за предыдущие 15 минут {$candlePrevious15minutes->getVolume()}",
-                //    "Объём изменился на $volumeChangePercent%",
-                //    "На балансе доступно {$walletBalance->totalAvailableBalance} USDT",
-                //    "Можно купить $coinsAbleToBuy монет",
-                //    PHP_EOL
-                //];
-                $log = [
-                    date('Y-m-d H:i:s'),
-                    $this->coin->getByBitCode(),
-                    $candleLast15minutes->getClosePrice(),
-                    $candles7hoursExceptLast15Minutes->getHighestPrice(),
-                    "$priceChangePercent%",
-                    $candleLast15minutes->getVolume(),
-                    $candlePrevious15minutes->getVolume(),
-                    "$volumeChangePercent%",
-                    $walletBalance->totalAvailableBalance,
-                    $coinsAbleToBuy,
-                ];
-                fputcsv($resource, $log);
                 $this->logger?->info("Объём изменился на $volumeChangePercent%");
                 $this->logger?->info("Цена изменилась на $priceChangePercent%");
                 $this->logger?->info("На балансе доступно {$walletBalance->totalAvailableBalance} USDT");
