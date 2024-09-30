@@ -38,7 +38,8 @@ class TradeCommand extends Command
     {
         while (true) {
                 $coins = $this->coinRepository->createQueryBuilder('c')->getQuery()->toIterable();
-                foreach ($coins as $coin) {
+                /** @var Coin $coin */
+            foreach ($coins as $coin) {
                     $strategy = $this->tradingStrategyFactory->create($input->getArgument('strategy'), $coin);
                     try {
                         $strategy->dispatchEvents();
@@ -46,6 +47,7 @@ class TradeCommand extends Command
                         if ($exception->getCode() !== ErrorCodes::NOT_SUPPORTED_SYMBOLS) {
                             throw $exception;
                         }
+                        $output->writeln("{$coin->getByBitCode()}: {$exception->getMessage()}");
                     }
                     $this->entityManager->clear();
                 }
