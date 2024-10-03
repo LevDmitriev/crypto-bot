@@ -148,7 +148,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     }
 
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             LastTwoHoursPriceChangedEvent::NAME => ['moveStopPlusPoint2','sell50Percent', 'sell25Percent', 'moveStopPlus10point2']
