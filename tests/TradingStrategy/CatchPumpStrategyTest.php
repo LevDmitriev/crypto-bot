@@ -62,7 +62,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             closePrice: '102',
             highestPrice: '102',
             lowestPrice: '1',
-            volume: '130000',
+            volume: '115000',
             turnover: '1'
         );
         $candleCollection->add($candlePrevious15minutes);
@@ -129,7 +129,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             closePrice: '102',
             highestPrice: '102',
             lowestPrice: '1',
-            volume: '120000',
+            volume: '110000',
             turnover: '1'
         );
         $candleCollection->add($candlePrevious15minutes);
@@ -427,6 +427,7 @@ class CatchPumpStrategyTest extends KernelTestCase
         $buyOrder->setCoin($coin)
             ->setQuantity('2')
             ->setAveragePrice('100')
+            ->setCumulativeExecutedQuantity('2')
             ->setSide(Order\ByBit\Side::Buy)
         ;
         $position = new Position();
