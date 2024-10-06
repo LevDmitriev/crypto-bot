@@ -62,7 +62,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             closePrice: '102',
             highestPrice: '102',
             lowestPrice: '1',
-            volume: '115000',
+            volume: '130000',
             turnover: '1'
         );
         $candleCollection->add($candlePrevious15minutes);
@@ -129,7 +129,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             closePrice: '102',
             highestPrice: '102',
             lowestPrice: '1',
-            volume: '110000',
+            volume: '101000',
             turnover: '1'
         );
         $candleCollection->add($candlePrevious15minutes);
@@ -328,8 +328,8 @@ class CatchPumpStrategyTest extends KernelTestCase
         $candleLast15minutes = new Candle(
             startTime: 1,
             openPrice: '1',
-            closePrice: '101',
-            highestPrice: '101',
+            closePrice: '100',
+            highestPrice: '100',
             lowestPrice: '1',
             volume: '130000',
             turnover: '1'

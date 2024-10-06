@@ -89,8 +89,8 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 $this->logger?->info("Цена изменилась на $priceChangePercent%");
                 $this->logger?->info("На балансе доступно {$walletBalance->totalAvailableBalance} USDT");
                 $this->logger?->info("Можно купить $coinsAbleToBuy монет");
-                $result = \bccomp($volumeChangePercent, "15", 0) >= 0
-                          && \bccomp($priceChangePercent, '2', 0) >= 0
+                $result = \bccomp($volumeChangePercent, "3", 0) >= 0
+                          && \bccomp($priceChangePercent, '1', 0) >= 0
                           && $coinsAbleToBuy >= '0.0001'
                 ;
                 $result ? $this->logger?->info("Позиция может быть открыта") : null;
