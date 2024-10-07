@@ -37,21 +37,21 @@ class TradeCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         while (true) {
-                $coins = $this->coinRepository->createQueryBuilder('c')->getQuery()->toIterable();
-                /** @var Coin $coin */
+            $coins = $this->coinRepository->createQueryBuilder('c')->getQuery()->toIterable();
+            /** @var Coin $coin */
             foreach ($coins as $coin) {
-                    $strategy = $this->tradingStrategyFactory->create($input->getArgument('strategy'), $coin);
-                    try {
-                        $strategy->dispatchEvents();
-                    } catch (HttpException $exception) {
-                        if ($exception->getCode() !== ErrorCodes::NOT_SUPPORTED_SYMBOLS) {
-                            throw $exception;
-                        }
-                        $output->writeln("{$coin->getByBitCode()}: {$exception->getMessage()}");
+                $strategy = $this->tradingStrategyFactory->create($input->getArgument('strategy'), $coin);
+                try {
+                    $strategy->dispatchEvents();
+                } catch (HttpException $exception) {
+                    if ($exception->getCode() !== ErrorCodes::NOT_SUPPORTED_SYMBOLS) {
+                        throw $exception;
                     }
-                    $this->entityManager->clear();
+                    $output->writeln("{$coin->getByBitCode()}: {$exception->getMessage()}");
                 }
-                sleep(60);
+                $this->entityManager->clear();
+            }
+            sleep(60);
         }
 
         return self::SUCCESS;
