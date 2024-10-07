@@ -109,7 +109,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
 
     public function openPosition(): Position
     {
-        $scale = 2;
+        $scale = 6;
         $walletBalance = $this->accountRepository->getWalletBalance();
         /** @var string $risk Риск в $ */
         $risk = bcmul('0.01', $walletBalance->totalWalletBallance, $scale);
@@ -121,7 +121,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             bcdiv(
                 bcsub($lastTradedPrice, $stopPrice, $scale),
                 $lastTradedPrice,
-                4
+                $scale
             ),
             "100",
             $scale
@@ -269,6 +269,9 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function dispatchEvents(): void
     {
+        if ($this->coin->getByBitCode() !== "DOME") {
+            return;
+        }
         if ($this->canOpenPosition()) {
             $this->openPosition();
         }
