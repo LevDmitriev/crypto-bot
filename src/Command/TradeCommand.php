@@ -44,7 +44,7 @@ class TradeCommand extends Command
                 try {
                     $strategy->dispatchEvents();
                 } catch (HttpException $exception) {
-                    if ($exception->getCode() !== ErrorCodes::NOT_SUPPORTED_SYMBOLS) {
+                    if (!in_array($exception->getCode(),[ErrorCodes::NOT_SUPPORTED_SYMBOLS, ErrorCodes::INVALID_SERVER_TIMESTAMP])) {
                         throw $exception;
                     }
                     $output->writeln("{$coin->getByBitCode()}: {$exception->getMessage()}");
