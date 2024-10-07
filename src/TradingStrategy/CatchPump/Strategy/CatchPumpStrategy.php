@@ -60,7 +60,6 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function canOpenPosition(): bool
     {
-        //return true;
         $result = false;
         if (!$this->positionRepository->findOneNotClosedByCoin($this->coin) && $this->positionRepository->getTotalNotClosedCount() < 5) {
             /** @var CandleCollection $candles7hours 7 часовая свечка */
@@ -71,9 +70,9 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $candleLast15minutes = new CandleCollection($candles7hours->slice(27, 1));
             /** @var CandleInterface $candlePrevious15minutes Предыдущая 15 минутная свечка */
             $candlePrevious15minutes = new CandleCollection($candles7hours->slice(26, 1));
-            if (bccomp($candlePrevious15minutes->getVolume(), '0', 4) > 0 && bccomp($candles7hoursExceptLast15Minutes->getHighestPrice(),'0', 2) > 0) {
+            if (bccomp($candlePrevious15minutes->getVolume(), '0', 4) > 0 && bccomp($candles7hoursExceptLast15Minutes->getHighestPrice(),'0', 6) > 0) {
                 /** @var string $priceChangePercent Изменение цены */
-                $priceChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getClosePrice(), $candles7hoursExceptLast15Minutes->getHighestPrice(), 2), '1', 2), '100', 0);
+                $priceChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getClosePrice(), $candles7hoursExceptLast15Minutes->getHighestPrice(), 6), '1', 2), '100', 0);
                 $volumeChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getVolume(), $candlePrevious15minutes->getVolume(), 4), '1', 4), '100', 0);
 
                 /*
@@ -85,15 +84,24 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 */
                 $walletBalance = $this->accountRepository->getWalletBalance();
                 $coinsAbleToBuy = \bcdiv($walletBalance->totalAvailableBalance, $candleLast15minutes->getClosePrice(), 4);
-                $this->logger?->info("Объём изменился на $volumeChangePercent%");
-                $this->logger?->info("Цена изменилась на $priceChangePercent%");
-                $this->logger?->info("На балансе доступно {$walletBalance->totalAvailableBalance} USDT");
-                $this->logger?->info("Можно купить $coinsAbleToBuy монет");
-                $result = \bccomp($volumeChangePercent, "3", 0) >= 0
-                          && \bccomp($priceChangePercent, '1', 0) >= 0
-                          && $coinsAbleToBuy >= '0.0001'
-                ;
-                $result ? $this->logger?->info("Позиция может быть открыта") : null;
+                /** @var bool $isVolumeChangedEnough Объёи изменился достаточно? */
+                $isVolumeChangedEnough = \bccomp($volumeChangePercent, "3", 0) >= 0;
+                /** @var bool $isPriceChangedEnough Цена изменилась достаточно? */
+                $isPriceChangedEnough = \bccomp($priceChangePercent, '1', 0) >= 0;
+                /** @var bool $isAbleToBuyEnoughCoins Можно купить достаточно монет? */
+                $isAbleToBuyEnoughCoins = \bccomp($coinsAbleToBuy,'0.0001', 4) >= 0;
+                $result = $isVolumeChangedEnough && $isPriceChangedEnough && $isAbleToBuyEnoughCoins;
+                $message = "Обработана монета {$this->coin->getByBitCode()}. ";
+                if (!$isPriceChangedEnough) {
+                    $message .= "Цена изменилась на $priceChangePercent";
+                } elseif (!$isVolumeChangedEnough) {
+                    $message .= "Объём изменился на $volumeChangePercent";
+                } elseif (!$isAbleToBuyEnoughCoins) {
+                    $message .= "Количество монет к покупке $coinsAbleToBuy";
+                } else {
+                    $message .= "Позиция может быть открыта";
+                }
+                $this->logger?->warning($message);
             }
         }
         return $result;
