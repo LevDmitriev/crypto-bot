@@ -25,7 +25,7 @@ class OrderListener
     public function closePosition(Order $order): void
     {
         if ($order->getPosition()?->getStrategyName() === CatchPumpStrategy::NAME) {
-            if ($order->isStop() && $order->isFilled()) {
+            if ($order->isStop() && !$order->isNew()) {
                 $this->positionStateMachine->apply($order->getPosition(), 'close');
             }
         }
