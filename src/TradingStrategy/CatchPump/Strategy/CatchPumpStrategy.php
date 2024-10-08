@@ -85,9 +85,9 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 $walletBalance = $this->accountRepository->getWalletBalance();
                 $coinsAbleToBuy = \bcdiv($walletBalance->totalAvailableBalance, $candleLast15minutes->getClosePrice(), 4);
                 /** @var bool $isVolumeChangedEnough Объёи изменился достаточно? */
-                $isVolumeChangedEnough = \bccomp($volumeChangePercent, "3", 0) >= 0;
+                $isVolumeChangedEnough = \bccomp($volumeChangePercent, "30", 0) >= 0;
                 /** @var bool $isPriceChangedEnough Цена изменилась достаточно? */
-                $isPriceChangedEnough = \bccomp($priceChangePercent, '1', 0) >= 0;
+                $isPriceChangedEnough = \bccomp($priceChangePercent, '2', 0) >= 0;
                 /** @var bool $isAbleToBuyEnoughCoins Можно купить достаточно монет? */
                 $isAbleToBuyEnoughCoins = \bccomp($coinsAbleToBuy,'0.0001', 4) >= 0;
                 $result = $isVolumeChangedEnough && $isPriceChangedEnough && $isAbleToBuyEnoughCoins;

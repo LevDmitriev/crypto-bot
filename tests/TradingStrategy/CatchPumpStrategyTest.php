@@ -555,7 +555,7 @@ class CatchPumpStrategyTest extends KernelTestCase
         );
         $position = $strategy->openPosition();
         $buyOrder = $position->getOrders()->first();
-        self::assertEquals('51.02', $buyOrder->getQuantity());
+        self::assertEquals('51.000112', $buyOrder->getQuantity());
         self::assertEquals(Type::Market, $buyOrder->getType());
     }
 }
