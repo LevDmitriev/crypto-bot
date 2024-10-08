@@ -112,7 +112,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $scale = 6;
         $walletBalance = $this->accountRepository->getWalletBalance();
         /** @var string $risk Риск в $ */
-        $risk = bcmul('0.01', $walletBalance->totalWalletBallance, $scale);
+        $risk = bcmul('0.01', $walletBalance->totalEquity, $scale);
         $lastHourCandle = $this->candleRepository->find(symbol: $this->coin->getByBitCode() . 'USDT', interval: '60', limit: 1);
         $stopAtr = bcsub($lastHourCandle->getHighestPrice(), $lastHourCandle->getLowestPrice(), $scale);
         $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getByBitCode() . 'USDT');
@@ -128,7 +128,6 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         );
         /** @var string $quantity Кол-во USDT на которое будут куплены монеты */
         $quantity = bcdiv(bcmul($risk, '100', $scale), $stopPercent, $scale);
-        //$quantity = '7';
         $buyOrder = $this->orderFactory->create(coin: $this->coin, quantity: $quantity);
         $position = new Position();
         $position->setCoin($this->coin);

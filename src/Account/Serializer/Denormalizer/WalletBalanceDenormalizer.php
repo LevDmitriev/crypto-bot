@@ -13,8 +13,9 @@ class WalletBalanceDenormalizer implements DenormalizerInterface
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
     {
         return new WalletBalance(
-            totalWalletBallance: $data['totalWalletBalance'],
-            totalAvailableBalance: $data['totalAvailableBalance']
+            totalWalletBalance:    $data['totalWalletBalance'],
+            totalAvailableBalance: $data['totalAvailableBalance'],
+            totalEquity: $data['totalEquity']
         )
         ;
     }

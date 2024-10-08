@@ -76,8 +76,9 @@ class CatchPumpStrategyTest extends KernelTestCase
         $candleRepository->method('find')->willReturn($candleCollection);
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn(new WalletBalance(
-            totalWalletBallance: '1000',
-            totalAvailableBalance: '300'
+            totalWalletBalance:    '300',
+            totalAvailableBalance: '300',
+            totalEquity: '1000'
         ));
         $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
@@ -142,8 +143,9 @@ class CatchPumpStrategyTest extends KernelTestCase
         $candleRepository->method('find')->willReturn($candleCollection);
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn(new WalletBalance(
-            totalWalletBallance: '1000',
-            totalAvailableBalance: '300'
+            totalWalletBalance:    '300',
+            totalAvailableBalance: '300',
+            totalEquity: '1000'
         ));
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $lockFactory = new LockFactory(new InMemoryStore());
@@ -209,8 +211,9 @@ class CatchPumpStrategyTest extends KernelTestCase
         $candleRepository->method('find')->willReturn($candleCollection);
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn(new WalletBalance(
-            totalWalletBallance: '1000',
-            totalAvailableBalance: '0'
+            totalWalletBalance:    '0',
+            totalAvailableBalance: '0',
+            totalEquity: '1000'
         ));
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $lockFactory = new LockFactory(new InMemoryStore());
@@ -277,8 +280,9 @@ class CatchPumpStrategyTest extends KernelTestCase
         $candleRepository->method('find')->willReturn($candleCollection);
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn(new WalletBalance(
-            totalWalletBallance: '1000',
-            totalAvailableBalance: '300'
+            totalWalletBalance:    '300',
+            totalAvailableBalance: '300',
+            totalEquity: '1000',
         ));
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $lockFactory = new LockFactory(new InMemoryStore());
@@ -344,8 +348,9 @@ class CatchPumpStrategyTest extends KernelTestCase
         $candleRepository->method('find')->willReturn($candleCollection);
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn(new WalletBalance(
-            totalWalletBallance: '1000',
-            totalAvailableBalance: '300'
+            totalWalletBalance:    '300',
+            totalAvailableBalance: '300',
+            totalEquity: '1000',
         ));
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $lockFactory = new LockFactory(new InMemoryStore());
@@ -389,7 +394,7 @@ class CatchPumpStrategyTest extends KernelTestCase
         $positionRepository = $this->createMock(PositionRepository::class);
         $candleRepository = $this->createMock(CandleRepositoryInterface::class);
         $candleRepository->method('find')->willReturn($candleCollection);
-        $walletBalance = new WalletBalance('500', '1000');
+        $walletBalance = new WalletBalance('500', '500', totalEquity: '1000');
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn($walletBalance);
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
@@ -536,7 +541,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             turnover: '1'
         );
         $candleRepository->method('find')->willReturn(new CandleCollection([$candle]));
-        $walletBalance = new WalletBalance('1000', '500');
+        $walletBalance = new WalletBalance('500', '500', totalEquity: '1000');
         $accountRepository = $this->createMock(AccountRepository::class);
         $accountRepository->method('getWalletBalance')->willReturn($walletBalance);
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
