@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
+use App\Bybit\ErrorCodes;
 use App\Entity\Order;
 use App\Entity\Order\Status;
 use App\Messages\EnrichMarketOrderFromByBitCommand;
 use ByBit\SDK\ByBitApi;
+use ByBit\SDK\Exceptions\HttpException;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
@@ -51,9 +53,22 @@ readonly class PostUpdateOrderSendToByBitListener
                         break;
                 }
             }
-            $response = $this->byBitApi->tradeApi()->amendOrder($orderArray);
-            if ($order->isMarket() && $order->isCommon()) {
-                $this->messageBus->dispatch(new EnrichMarketOrderFromByBitCommand($response['orderLinkId']));
+            try {
+                $response = $this->byBitApi->tradeApi()->amendOrder($orderArray);
+                if ($order->isMarket() && $order->isCommon()) {
+                    $this->messageBus->dispatch(new EnrichMarketOrderFromByBitCommand($response['orderLinkId']));
+                }
+            } catch (HttpException $exception) {
+                /*
+                 * Есть очень специфическая незадокументированная ошибка.
+                 * Если отправить приказ на обновление, но в нём ничего не изменить,
+                 * возвращается ошибка 10001, но у неё совершенно другое сообщение об ошибке:
+                 * The order remains unchanged as the parameters entered match the existing ones.
+                 * Игнорируем такую ошибку
+                 */
+                if ($exception->getMessage() !== ErrorCodes::NOT_SUPPORTED_SYMBOLS) {
+                    throw $exception;
+                }
             }
         }
     }
