@@ -66,7 +66,7 @@ readonly class PostUpdateOrderSendToByBitListener
                  * The order remains unchanged as the parameters entered match the existing ones.
                  * Игнорируем такую ошибку
                  */
-                if ($exception->getMessage() !== ErrorCodes::NOT_SUPPORTED_SYMBOLS) {
+                if ($exception->getCode() !== ErrorCodes::NOT_SUPPORTED_SYMBOLS) {
                     throw $exception;
                 }
             }
