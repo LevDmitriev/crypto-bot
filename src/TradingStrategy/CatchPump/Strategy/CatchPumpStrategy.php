@@ -255,12 +255,6 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 $this->entityManager->flush();
             }
         });
-        $now = new \DateTime('now', 'Europe/Moscow');
-        $today1850 = new \DateTime('today 18:50', new \DateTimeZone('Europe/Moscow'));
-        $delay = $today1850->getTimestamp() - $now->getTimestamp();
-        if ($delay) { // Если 18:50 ещё не наступило, то отправляем команду закрытия позиции на это время
-            $this->commandBus->dispatch(new ClosePositionCommand($event->position->getId()), [new DelayStamp($delay * 1000)]);
-        }
     }
 
     /**
