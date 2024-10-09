@@ -11,7 +11,7 @@ use Symfony\Component\Workflow\WorkflowInterface;
 /**
  * Команда по закрытию всех позиций
  */
-#[AsCronTask('50 21 * * *', 'Europe/Moscow', transports: 'async')]
+#[AsCronTask('50 18 * * *', 'Europe/Moscow', transports: 'async')]
 readonly class CloseAllPositionsTask
 {
     public function __construct(
