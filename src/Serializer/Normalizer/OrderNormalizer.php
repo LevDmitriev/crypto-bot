@@ -29,7 +29,7 @@ class OrderNormalizer implements NormalizerInterface
             'symbol' => $object->getSymbol(),
             'side' => $object->getSide()->value,
             'orderType' => $object->getType()->value,
-            'qty' => bcadd('0', (string) $object->getQuantity(), 2), //API принимает лишь 2 числа после запятой
+            'qty' => (string) $object->getQuantity(),
             'price' => $object->getType() === Order\ByBit\Type::Limit ? (string) $object->getPrice() : null,
             'triggerPrice' => $object->getTriggerPrice(),
         ];

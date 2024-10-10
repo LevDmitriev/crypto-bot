@@ -4,8 +4,10 @@ namespace App\Scheduler\Task;
 
 use App\Entity\Order\ByBit\Category;
 use App\Entity\Order\ByBit\OrderFilter;
+use App\Messages\ClosePositionCommand;
 use App\Repository\PositionRepository;
 use ByBit\SDK\ByBitApi;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Scheduler\Attribute\AsCronTask;
 use Symfony\Component\Workflow\WorkflowInterface;
 
@@ -16,7 +18,7 @@ use Symfony\Component\Workflow\WorkflowInterface;
 readonly class CloseAllPositionsTask
 {
     public function __construct(
-        private WorkflowInterface $positionStateMachine,
+        private MessageBusInterface $commandBus,
         private PositionRepository $positionRepository,
         private ByBitApi $byBitApi
     ) {
@@ -28,7 +30,7 @@ readonly class CloseAllPositionsTask
         $this->byBitApi->tradeApi()->cancelAllOrders(['category' => Category::spot->value, 'orderFilter' => OrderFilter::Order->value]);
         $this->byBitApi->tradeApi()->cancelAllOrders(['category' => Category::spot->value, 'orderFilter' => OrderFilter::StopOrder->value]);
         foreach ($this->positionRepository->findAllNotClosed() as $position) {
-            $this->positionStateMachine->apply($position, 'close');
+            $this->commandBus->dispatch(new ClosePositionCommand($position->getId()));
         }
     }
 }
