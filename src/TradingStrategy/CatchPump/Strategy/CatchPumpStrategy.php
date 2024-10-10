@@ -262,9 +262,6 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function dispatchEvents(): void
     {
-        if ($this->coin->getByBitCode() !== 'DOGS') {
-            return;
-        }
         if ($this->canOpenPosition()) {
             $this->openPosition();
         }
