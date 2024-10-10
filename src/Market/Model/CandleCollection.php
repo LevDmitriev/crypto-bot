@@ -14,7 +14,7 @@ class CandleCollection extends ArrayCollection implements CandleInterface
     {
         assert($this->count());
         return $this->reduce(
-            fn (string $accumulator, Candle $candle) => \bccomp($candle->getHighestPrice(), $accumulator, 4) === 1 ? $candle->getHighestPrice() : $accumulator,
+            fn (string $accumulator, Candle $candle) => \bccomp($candle->getHighestPrice(), $accumulator, 8) === 1 ? $candle->getHighestPrice() : $accumulator,
             '0'
         );
     }
