@@ -82,11 +82,18 @@ class Order
     private string $averagePrice;
 
     /**
-     * Итоговое купленное количество
+     * Итоговое купленное количество без учёта комиссии
      * @var string
      */
     #[ORM\Column(nullable: true)]
     private string $cumulativeExecutedQuantity;
+
+    /**
+     * Комиссия, которую взяла биржа. В монете приказа.
+     * @var string
+     */
+    #[ORM\Column(nullable: true)]
+    private string $cumulativeExecutedFee;
 
     /**
      * Итоговая стоимость покупки
@@ -223,6 +230,16 @@ class Order
     }
 
     /**
+     * Получить количество купленных монет за вычетом комиссии биржи.
+     * @return string
+     */
+    public function getRealExecutedQuantity(): string
+    {
+        return bcsub($this->cumulativeExecutedQuantity, $this->cumulativeExecutedFee, 6);
+    }
+
+    /**
+     * Получить общее количество купленных монет без учёта комиссии биржи.
      * @return string
      */
     public function getCumulativeExecutedQuantity(): string
@@ -367,7 +384,7 @@ class Order
 
         switch ($this->getSide()) {
             case Side::Buy:
-                $result[] = "{$this->getCumulativeExecutedQuantity()} {$this->getCoin()->getByBitCode()} за {$this->getQuantity()} USDT";
+                $result[] = "{$this->getRealExecutedQuantity()} {$this->getCoin()->getByBitCode()} за {$this->getQuantity()} USDT";
                 break;
             case Side::Sell:
                 $result[] = "{$this->getQuantity()} {$this->getCoin()->getByBitCode()}";
@@ -385,5 +402,15 @@ class Order
 
 
         return implode(' ', $result);
+    }
+
+    public function getCumulativeExecutedFee(): string
+    {
+        return $this->cumulativeExecutedFee;
+    }
+
+    public function setCumulativeExecutedFee(string $cumulativeExecutedFee): void
+    {
+        $this->cumulativeExecutedFee = $cumulativeExecutedFee;
     }
 }

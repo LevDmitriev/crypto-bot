@@ -41,19 +41,19 @@ class TradingStrategyFactory implements TradingStrategyFactoryInterface, LoggerA
     {
         $strategy =
          match ($name) {
-            CatchPumpStrategy::NAME => new CatchPumpStrategy(
-                coin:                 $coin,
-                entityManager:        $this->entityManager,
-                candleRepository:     $this->candleRepository,
-                positionRepository:   $this->positionRepository,
-                accountRepository:    $this->accountRepository,
-                dispatcher:           $this->dispatcher,
-                orderFactory:         $this->orderFactory,
-                commandBus:           $this->commandBus,
-                positionStateMachine: $this->positionStateMachine,
-                lockFactory:          $this->lockFactory
-            )
-        };
+             CatchPumpStrategy::NAME => new CatchPumpStrategy(
+                 coin:                 $coin,
+                 entityManager:        $this->entityManager,
+                 candleRepository:     $this->candleRepository,
+                 positionRepository:   $this->positionRepository,
+                 accountRepository:    $this->accountRepository,
+                 dispatcher:           $this->dispatcher,
+                 orderFactory:         $this->orderFactory,
+                 commandBus:           $this->commandBus,
+                 positionStateMachine: $this->positionStateMachine,
+                 lockFactory:          $this->lockFactory
+             )
+         };
         if ($strategy instanceof LoggerAwareInterface) {
             $strategy->setLogger($this->logger);
         }

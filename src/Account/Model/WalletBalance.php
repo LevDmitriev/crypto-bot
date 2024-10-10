@@ -16,7 +16,6 @@ readonly class WalletBalance
         public string $totalWalletBalance,
         public string $totalAvailableBalance,
         public string $totalEquity
-    )
-    {
+    ) {
     }
 }

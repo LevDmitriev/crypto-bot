@@ -16,7 +16,7 @@ framework:
              async: '%env(MESSENGER_TRANSPORT_DSN)%'
         routing:
             App\Messages\CreateOrderToPositionCommand: async
-            App\Messages\EnrichMarketOrderFromByBitCommand: sync
+            App\Messages\EnrichOrderFromByBitCommand: sync
             App\Messages\ClosePositionCommand: async
 when@test:
     framework:

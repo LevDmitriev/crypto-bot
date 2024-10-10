@@ -7,7 +7,7 @@ namespace App\EventListener;
 use App\Bybit\ErrorCodes;
 use App\Entity\Order;
 use App\Entity\Order\Status;
-use App\Messages\EnrichMarketOrderFromByBitCommand;
+use App\Messages\EnrichOrderFromByBitCommand;
 use ByBit\SDK\ByBitApi;
 use ByBit\SDK\Exceptions\HttpException;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
@@ -23,7 +23,6 @@ readonly class PostUpdateOrderSendToByBitListener
     public function __construct(
         private ByBitApi $byBitApi,
         private EntityManagerInterface $entityManager,
-        private MessageBusInterface $messageBus,
     ) {
     }
 
@@ -36,7 +35,7 @@ readonly class PostUpdateOrderSendToByBitListener
      */
     public function sendToByBit(Order $order): void
     {
-        if ($order->getStatus() === Status::New->value) {
+        if ($order->isNew()) {
             $orderArray = [
                 'orderLinkId' => (string) $order->getId(),
                 'symbol' => $order->getCoin()->getByBitCode() . 'USDT',
@@ -54,10 +53,7 @@ readonly class PostUpdateOrderSendToByBitListener
                 }
             }
             try {
-                $response = $this->byBitApi->tradeApi()->amendOrder($orderArray);
-                if ($order->isMarket() && $order->isCommon()) {
-                    $this->messageBus->dispatch(new EnrichMarketOrderFromByBitCommand($response['orderLinkId']));
-                }
+                $this->byBitApi->tradeApi()->amendOrder($orderArray);
             } catch (HttpException $exception) {
                 /*
                  * Есть очень специфическая незадокументированная ошибка.

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\EventListener;
 
 use App\Entity\Order;
-use App\Messages\EnrichMarketOrderFromByBitCommand;
+use App\Messages\EnrichOrderFromByBitCommand;
 use ByBit\SDK\ByBitApi;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\Events;
@@ -34,7 +34,7 @@ class PostPersistOrderSendToByBitListener
         $orderArray = $this->normalizer->normalize($order, '[]');
         $response = $this->byBitApi->tradeApi()->placeOrder($orderArray);
         if ($order->isMarket() && $order->isCommon()) {
-            $this->messageBus->dispatch(new EnrichMarketOrderFromByBitCommand($response['orderLinkId']));
+            $this->messageBus->dispatch(new EnrichOrderFromByBitCommand($response['orderLinkId']));
         }
     }
 }

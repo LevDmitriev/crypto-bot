@@ -70,7 +70,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $candleLast15minutes = new CandleCollection($candles7hours->slice(27, 1));
             /** @var CandleInterface $candlePrevious15minutes Предыдущая 15 минутная свечка */
             $candlePrevious15minutes = new CandleCollection($candles7hours->slice(26, 1));
-            if (bccomp($candlePrevious15minutes->getVolume(), '0', 4) > 0 && bccomp($candles7hoursExceptLast15Minutes->getHighestPrice(),'0', 6) > 0) {
+            if (bccomp($candlePrevious15minutes->getVolume(), '0', 4) > 0 && bccomp($candles7hoursExceptLast15Minutes->getHighestPrice(), '0', 6) > 0) {
                 /** @var string $priceChangePercent Изменение цены */
                 $priceChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getClosePrice(), $candles7hoursExceptLast15Minutes->getHighestPrice(), 6), '1', 2), '100', 0);
                 $volumeChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getVolume(), $candlePrevious15minutes->getVolume(), 4), '1', 4), '100', 0);
@@ -89,7 +89,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 /** @var bool $isPriceChangedEnough Цена изменилась достаточно? */
                 $isPriceChangedEnough = \bccomp($priceChangePercent, '2', 0) >= 0;
                 /** @var bool $isAbleToBuyEnoughCoins Можно купить достаточно монет? */
-                $isAbleToBuyEnoughCoins = \bccomp($coinsAbleToBuy,'0.0001', 4) >= 0;
+                $isAbleToBuyEnoughCoins = \bccomp($coinsAbleToBuy, '0.0001', 4) >= 0;
                 $result = $isVolumeChangedEnough && $isPriceChangedEnough && $isAbleToBuyEnoughCoins;
                 $message = "Обработана монета {$this->coin->getByBitCode()}. ";
                 if (!$isPriceChangedEnough) {
@@ -141,7 +141,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 new CreateOrderToPositionCommand(
                     positionId:   $position->getId(),
                     coinId:       $this->coin->getId(),
-                    quantity:     $buyOrder->getCumulativeExecutedQuantity(),
+                    quantity:     $buyOrder->getRealExecutedQuantity(),
                     triggerPrice: $stopPrice,
                     side:         Side::Sell,
                     orderFilter:  OrderFilter::StopOrder
@@ -200,7 +200,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             if ($event->changePercent >= 8 && $lock->acquire()) {
                 $orders = $event->position->getOrders();
                 $buyOrder = $orders->filterBuyOrders()->first();
-                $quantityForSale = bcdiv($buyOrder->getCumulativeExecutedQuantity(), '2', 4);
+                $quantityForSale = bcdiv($buyOrder->getRealExecutedQuantity(), '2', 4);
                 $stopOrder = $orders->filterStopOrders()->first();
                 $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.02', 4));
                 $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);

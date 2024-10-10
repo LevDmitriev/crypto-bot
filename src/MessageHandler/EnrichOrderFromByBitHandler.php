@@ -6,7 +6,7 @@ namespace App\MessageHandler;
 
 use App\Entity\Order;
 use App\Entity\Order\ByBit\Status as ByBitStatus;
-use App\Messages\EnrichMarketOrderFromByBitCommand;
+use App\Messages\EnrichOrderFromByBitCommand;
 use App\Repository\OrderRepository;
 use ByBit\SDK\ByBitApi;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,22 +19,25 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
  * Обработчик проставления статуса приказу
  */
 #[AsMessageHandler]
-class EnrichMarketOrderFromByBitHandler
+readonly class EnrichOrderFromByBitHandler
 {
     public function __construct(
-        private readonly OrderRepository $orderRepository,
-        private readonly ByBitApi $byBitApi,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly DenormalizerInterface $denormalizer
+        private OrderRepository $orderRepository,
+        private ByBitApi $byBitApi,
+        private EntityManagerInterface $entityManager,
+        private DenormalizerInterface $denormalizer
     ) {
     }
 
-    public function __invoke(EnrichMarketOrderFromByBitCommand $message)
+    public function __invoke(EnrichOrderFromByBitCommand $message)
     {
         /** @var Order|null $order */
         $order = $this->orderRepository->find($message->id);
-        if ($order && $order->isNew() && $order->isMarket() && $order->isCommon()) {
+        if ($order) {
             $orderFromApi = $this->byBitApi->tradeApi()->getOpenOrders(['orderLinkId' => $message->id, 'category' => 'spot']);
+            if (!isset($orderFromApi['list'][0])) {
+                $orderFromApi = $this->byBitApi->tradeApi()->getOrderHistory(['orderLinkId' => $message->id, 'category' => 'spot']);
+            }
             $orderFromApi = isset($orderFromApi['list'][0]) ? $orderFromApi['list'][0] : $orderFromApi;
             if (isset($orderFromApi['orderStatus']) && ByBitStatus::isClosedStatus(ByBitStatus::from($orderFromApi['orderStatus']))) {
                 $order = $this->denormalizer->denormalize($orderFromApi, Order::class, '[]', [AbstractNormalizer::OBJECT_TO_POPULATE => $order]);

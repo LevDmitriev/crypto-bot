@@ -20,6 +20,9 @@ class OrderDenormalizer implements \Symfony\Component\Serializer\Normalizer\Deno
         if ($data['cumExecQty']) {
             $order->setCumulativeExecutedQuantity($data['cumExecQty']);
         }
+        if ($data['cumExecFee']) {
+            $order->setCumulativeExecutedFee($data['cumExecFee']);
+        }
         if ($data['triggerPrice']) {
             $order->setTriggerPrice($data['triggerPrice']);
         }

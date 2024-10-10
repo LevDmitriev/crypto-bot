@@ -87,9 +87,9 @@ class Position
         foreach ($this->orders as $order) {
             if ($order->isFilled()) {
                 switch ($order->getSide()) {
-                    case Side::Buy: $result = bcadd($result, $order->getCumulativeExecutedQuantity(), 6);
+                    case Side::Buy: $result = bcadd($result, $order->getRealExecutedQuantity(), 6);
                         break;
-                    case Side::Sell: $result = bcsub($result, $order->getCumulativeExecutedQuantity(), 6);
+                    case Side::Sell: $result = bcsub($result, $order->getRealExecutedQuantity(), 6);
                         break;
                 }
             }
