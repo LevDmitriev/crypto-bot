@@ -65,11 +65,11 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             /** @var CandleCollection $candles7hours 7 часовая свечка */
             $candles7hours = $this->candleRepository->find(symbol: $this->coin->getByBitCode() . 'USDT', interval: '15', limit: 28);
             /** @var CandleCollection $candles7hoursExceptLast15Minutes 7 часовая свечка не включая последние 15 минут */
-            $candles7hoursExceptLast15Minutes = new CandleCollection($candles7hours->slice(0, 27));
+            $candles7hoursExceptLast15Minutes = new CandleCollection($candles7hours->slice(1, 27));
             /** @var CandleInterface $candleLast15minutes Последняя 15 минутная свечка */
-            $candleLast15minutes = new CandleCollection($candles7hours->slice(27, 1));
+            $candleLast15minutes = $candles7hours->first();
             /** @var CandleInterface $candlePrevious15minutes Предыдущая 15 минутная свечка */
-            $candlePrevious15minutes = new CandleCollection($candles7hours->slice(26, 1));
+            $candlePrevious15minutes = $candles7hours->get(1);
             if (bccomp($candlePrevious15minutes->getVolume(), '0', 4) > 0 && bccomp($candles7hoursExceptLast15Minutes->getHighestPrice(), '0', 6) > 0) {
                 /** @var string $priceChangePercent Изменение цены */
                 $priceChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getClosePrice(), $candles7hoursExceptLast15Minutes->getHighestPrice(), 6), '1', 2), '100', 0);
@@ -262,6 +262,9 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function dispatchEvents(): void
     {
+        if ($this->coin->getByBitCode() !== 'DOGS') {
+            return;
+        }
         if ($this->canOpenPosition()) {
             $this->openPosition();
         }

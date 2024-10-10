@@ -35,6 +35,26 @@ class CatchPumpStrategyTest extends KernelTestCase
     public function testCanOpenPosition(): void
     {
         $candleCollection = new CandleCollection();
+        $candleLast15minutes = new Candle(
+            startTime: 1,
+            openPrice: '1',
+            closePrice: '102',
+            highestPrice: '102',
+            lowestPrice: '1',
+            volume: '130000',
+            turnover: '1'
+        );
+        $candlePrevious15minutes = new Candle(
+            startTime: 1,
+            openPrice: '1',
+            closePrice: '1',
+            highestPrice: '100',
+            lowestPrice: '1',
+            volume: '100000',
+            turnover: '1'
+        );
+        $candleCollection->add($candleLast15minutes);
+        $candleCollection->add($candlePrevious15minutes);
         for ($i = 0; $i < 26; $i++) {
             $candle = new Candle(
                 startTime: 1,
@@ -47,26 +67,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             );
             $candleCollection->add($candle);
         }
-        $candlePrevious15minutes = new Candle(
-            startTime: 1,
-            openPrice: '1',
-            closePrice: '1',
-            highestPrice: '100',
-            lowestPrice: '1',
-            volume: '100000',
-            turnover: '1'
-        );
-        $candleLast15minutes = new Candle(
-            startTime: 1,
-            openPrice: '1',
-            closePrice: '102',
-            highestPrice: '102',
-            lowestPrice: '1',
-            volume: '130000',
-            turnover: '1'
-        );
-        $candleCollection->add($candlePrevious15minutes);
-        $candleCollection->add($candleLast15minutes);
+
         $coinRepository = self::getContainer()->get(CoinRepository::class);
         $coin = $coinRepository->findByByBitCode('BTC');
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
@@ -433,6 +434,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             ->setQuantity('2')
             ->setAveragePrice('100')
             ->setCumulativeExecutedQuantity('2')
+            ->setCumulativeExecutedFee('0')
             ->setSide(Order\ByBit\Side::Buy)
         ;
         $position = new Position();

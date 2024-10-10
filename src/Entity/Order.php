@@ -409,8 +409,10 @@ class Order
         return $this->cumulativeExecutedFee;
     }
 
-    public function setCumulativeExecutedFee(string $cumulativeExecutedFee): void
+    public function setCumulativeExecutedFee(string $cumulativeExecutedFee): self
     {
         $this->cumulativeExecutedFee = $cumulativeExecutedFee;
+
+        return $this;
     }
 }
