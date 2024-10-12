@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Workflow\Position;
 
-use App\Entity\Order;
 use App\Entity\Order\ByBit\Side;
 use App\Entity\Position;
-use App\Factory\OrderFactory;
-use ByBit\SDK\ByBitApi;
+use App\Messages\CreateOrderToPositionCommand;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\Event\TransitionEvent;
 use Symfony\Component\Workflow\WorkflowInterface;
 
@@ -20,7 +19,7 @@ class PositionEventSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private readonly WorkflowInterface $orderStateMachine,
-        private readonly OrderFactory $orderFactory
+        private readonly MessageBusInterface $commandBus,
     ) {
     }
 
@@ -55,13 +54,16 @@ class PositionEventSubscriber implements EventSubscriberInterface
      */
     public function sellAllCoins(TransitionEvent $event): void
     {
+        /** @var Position $position */
         $position = $event->getSubject();
         assert($position instanceof Position);
-        $sellOrder = $this->orderFactory->create(
-            coin: $position->getCoin(),
-            quantity: $position->getNotSoldQuantity(),
-            side: Side::Sell
+        $this->commandBus->dispatch(
+            new CreateOrderToPositionCommand(
+                positionId: $position->getId(),
+                coinId:     $position->getCoin()->getId(),
+                quantity:   $position->getNotSoldQuantity(),
+                side:       Side::Sell
+            )
         );
-        $position->addOrder($sellOrder);
     }
 }
