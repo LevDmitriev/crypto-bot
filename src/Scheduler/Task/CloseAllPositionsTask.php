@@ -9,7 +9,6 @@ use App\Repository\PositionRepository;
 use ByBit\SDK\ByBitApi;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Scheduler\Attribute\AsCronTask;
-use Symfony\Component\Workflow\WorkflowInterface;
 
 /**
  * Команда по закрытию всех позиций
