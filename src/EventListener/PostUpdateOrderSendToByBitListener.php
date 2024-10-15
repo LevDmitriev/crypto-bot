@@ -35,13 +35,20 @@ readonly class PostUpdateOrderSendToByBitListener
      */
     public function sendToByBit(Order $order): void
     {
-        if ($order->isNew()) {
+        $changeSet = $this->entityManager->getUnitOfWork()->getEntityChangeSet($order);
+        $fieldsNames = array_keys($changeSet);
+        // Обновляем в ByBit только если действительно произошли изменения
+        if ($order->isNew() && (
+            in_array('quantity', $fieldsNames, true)
+            || in_array('price', $fieldsNames, true)
+            || in_array('triggerPrice', $fieldsNames, true)
+            )) {
             $orderArray = [
                 'orderLinkId' => (string) $order->getId(),
                 'symbol' => $order->getCoin()->getByBitCode() . 'USDT',
                 'category' => $order->getCategory()->value,
             ];
-            $changeSet = $this->entityManager->getUnitOfWork()->getEntityChangeSet($order);
+
             foreach ($changeSet as $field => $value) {
                 switch ($field) {
                     case "quantity": $orderArray['qty'] = $value;
@@ -52,6 +59,7 @@ readonly class PostUpdateOrderSendToByBitListener
                         break;
                 }
             }
+
             try {
                 $this->byBitApi->tradeApi()->amendOrder($orderArray);
             } catch (HttpException $exception) {
