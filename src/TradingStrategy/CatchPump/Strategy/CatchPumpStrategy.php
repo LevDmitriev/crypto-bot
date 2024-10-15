@@ -61,7 +61,9 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     public function canOpenPosition(): bool
     {
         $result = false;
-        if (!$this->positionRepository->findOneNotClosedByCoin($this->coin) && $this->positionRepository->getTotalNotClosedCount() < 5) {
+        /** @var bool $isTimeCorrect Можно ли в это время открывать позиции. Позиции не должны открываться с 18:50 до 7:00 МСК */
+        $isTimeCorrect = time() < strtotime('today 18:50') && time() > strtotime('today 7:00');
+        if ($isTimeCorrect && !$this->positionRepository->findOneNotClosedByCoin($this->coin) && $this->positionRepository->getTotalNotClosedCount() < 5) {
             /** @var CandleCollection $candles7hours 7 часовая свечка */
             $candles7hours = $this->candleRepository->find(symbol: $this->coin->getByBitCode() . 'USDT', interval: '15', limit: 28);
             /** @var CandleCollection $candles7hoursExceptLast15Minutes 7 часовая свечка не включая последние 15 минут */
@@ -80,24 +82,17 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 * - по монете нет открытой позиции
                 * - объём торгов увеличился на 30% и более
                 * - цена увеличилась на 2% и более
-                * - Депозита хватает, чтобы купить хотя бы 0.0001 монету(Ограничение API)
                 */
-                $walletBalance = $this->accountRepository->getWalletBalance();
-                $coinsAbleToBuy = \bcdiv($walletBalance->totalAvailableBalance, $candleLast15minutes->getClosePrice(), 4);
                 /** @var bool $isVolumeChangedEnough Объёи изменился достаточно? */
                 $isVolumeChangedEnough = \bccomp($volumeChangePercent, "30", 0) >= 0;
                 /** @var bool $isPriceChangedEnough Цена изменилась достаточно? */
                 $isPriceChangedEnough = \bccomp($priceChangePercent, '2', 0) >= 0;
-                /** @var bool $isAbleToBuyEnoughCoins Можно купить достаточно монет? */
-                $isAbleToBuyEnoughCoins = \bccomp($coinsAbleToBuy, '0.0001', 4) >= 0;
-                $result = $isVolumeChangedEnough && $isPriceChangedEnough && $isAbleToBuyEnoughCoins;
+                $result = $isVolumeChangedEnough && $isPriceChangedEnough;
                 $message = "Обработана монета {$this->coin->getByBitCode()}. ";
                 if (!$isPriceChangedEnough) {
                     $message .= "Цена изменилась на $priceChangePercent";
                 } elseif (!$isVolumeChangedEnough) {
                     $message .= "Объём изменился на $volumeChangePercent";
-                } elseif (!$isAbleToBuyEnoughCoins) {
-                    $message .= "Количество монет к покупке $coinsAbleToBuy";
                 } else {
                     $message .= "Позиция может быть открыта";
                 }
