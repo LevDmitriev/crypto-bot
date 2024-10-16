@@ -172,7 +172,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 $orders = $event->position->getOrders();
                 $buyOrder = $orders->filterBuyOrders()->first();
                 $stopOrder = $orders->filterStopOrders()->first();
-                $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.002', 4);
+                $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.002', 6);
                 if ($stopOrder->getTriggerPrice() !== $triggerPrice) {
                     $stopOrder->setTriggerPrice($triggerPrice);
                     $this->entityManager->persist($stopOrder);
@@ -195,9 +195,9 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             if ($event->changePercent >= 8 && $lock->acquire()) {
                 $orders = $event->position->getOrders();
                 $buyOrder = $orders->filterBuyOrders()->first();
-                $quantityForSale = bcdiv($buyOrder->getRealExecutedQuantity(), '2', 4);
+                $quantityForSale = bcdiv($buyOrder->getRealExecutedQuantity(), '2', 6);
                 $stopOrder = $orders->filterStopOrders()->first();
-                $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.02', 4));
+                $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.02', 6));
                 $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
                 $event->position->addOrder($order);
                 $entityManager->persist($event->position);
@@ -219,9 +219,9 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             if ($event->changePercent >= 12 && $lock->acquire()) {
                 $orders = $event->position->getOrders();
                 $buyOrder = $orders->filterBuyOrders()->first();
-                $quantityForSale = bcdiv($buyOrder->getQuantity(), '4', 4);
+                $quantityForSale = bcdiv($buyOrder->getQuantity(), '4', 6);
                 $stopOrder = $orders->filterStopOrders()->first();
-                $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.082', 4));
+                $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.082', 6));
                 $order = $this->orderFactory->create(coin: $this->coin, quantity: $quantityForSale, side: Side::Sell);
                 $event->position->addOrder($order);
                 $entityManager->persist($event->position);
@@ -244,7 +244,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 $orders = $event->position->getOrders();
                 $buyOrder = $orders->filterBuyOrders()->first();
                 $stopOrder = $orders->filterStopOrders()->first();
-                $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.102', 4);
+                $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.102', 6);
                 $stopOrder->setTriggerPrice($triggerPrice);
                 $this->entityManager->persist($stopOrder);
                 $this->entityManager->flush();
@@ -273,7 +273,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             if (!$is2HoursExpired) {
                 $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getByBitCode() . 'USDT');
                 $averagePrice = $position->getAveragePrice();
-                $priceChangePercent = (float) bcmul(bcsub(bcdiv($lastTradedPrice, $averagePrice, 2), '1', 2), '100', 2);
+                $priceChangePercent = (float) bcmul(bcsub(bcdiv($lastTradedPrice, $averagePrice, 6), '1', 6), '100', 2);
                 $this->dispatcher->dispatch(new LastTwoHoursPriceChangedEvent($position, $priceChangePercent));
             }
         }
