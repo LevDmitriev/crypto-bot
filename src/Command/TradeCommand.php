@@ -14,6 +14,8 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Команда торговли с помощью торговой стратегии
@@ -24,6 +26,7 @@ class TradeCommand extends Command
         private readonly TradingStrategyFactoryInterface $tradingStrategyFactory,
         private readonly CoinRepository $coinRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly EventDispatcherInterface $eventDispatcher
     ) {
         parent::__construct('app:trade');
     }
@@ -41,6 +44,9 @@ class TradeCommand extends Command
             /** @var Coin $coin */
             foreach ($coins as $coin) {
                 $strategy = $this->tradingStrategyFactory->create($input->getArgument('strategy'), $coin);
+                if ($strategy instanceof EventSubscriberInterface) {
+                    $this->eventDispatcher->addSubscriber($strategy);
+                }
                 try {
                     $strategy->dispatchEvents();
                 } catch (HttpException $exception) {
@@ -49,9 +55,13 @@ class TradeCommand extends Command
                     }
                     $output->writeln("{$coin->getByBitCode()}: {$exception->getMessage()}");
                 }
+                finally {
+                    if ($strategy instanceof EventSubscriberInterface) {
+                        $this->eventDispatcher->removeSubscriber($strategy);
+                    }
+                }
                 $this->entityManager->clear();
             }
-            sleep(60);
         }
 
         return self::SUCCESS;

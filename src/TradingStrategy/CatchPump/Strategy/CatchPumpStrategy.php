@@ -153,7 +153,12 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     public static function getSubscribedEvents(): array
     {
         return [
-            LastTwoHoursPriceChangedEvent::NAME => ['moveStopPlusPoint2','sell50Percent', 'sell25Percent', 'moveStopPlus10point2']
+            LastTwoHoursPriceChangedEvent::NAME => [
+                ['moveStopPlusPoint2', 0],
+                ['sell50Percent', 0],
+                ['sell25Percent', 0],
+                ['moveStopPlus10point2', 0]
+            ]
         ];
     }
 
@@ -274,7 +279,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 $lastTradedPrice = $this->candleRepository->getLastTradedPrice($this->coin->getByBitCode() . 'USDT');
                 $averagePrice = $position->getAveragePrice();
                 $priceChangePercent = (float) bcmul(bcsub(bcdiv($lastTradedPrice, $averagePrice, 6), '1', 6), '100', 2);
-                $this->dispatcher->dispatch(new LastTwoHoursPriceChangedEvent($position, $priceChangePercent));
+                $this->dispatcher->dispatch(new LastTwoHoursPriceChangedEvent($position, $priceChangePercent), LastTwoHoursPriceChangedEvent::NAME);
             }
         }
     }
