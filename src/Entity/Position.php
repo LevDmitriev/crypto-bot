@@ -103,6 +103,14 @@ class Position
      */
     public function getOrders(): Collection
     {
+        return $this->orders;
+    }
+
+    /**
+     * @return OrderCollection
+     */
+    public function getOrdersCollection(): Collection
+    {
         if ($this->orders instanceof PersistentCollection) {
             return new OrderCollection($this->orders->toArray());
         }
