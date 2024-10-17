@@ -8,6 +8,7 @@ use App\Repository\PositionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\PersistentCollection;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 
@@ -40,7 +41,7 @@ class Position
     #[ORM\OrderBy(['createdAt' => 'ASC'])]
     private Collection $orders;
 
-    #[ORM\ManyToOne(cascade: ['persist'])]
+    #[ORM\ManyToOne(inversedBy: 'positions')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Coin $coin = null;
 
@@ -102,6 +103,10 @@ class Position
      */
     public function getOrders(): Collection
     {
+        if ($this->orders instanceof PersistentCollection) {
+            return new OrderCollection($this->orders->toArray());
+        }
+
         return $this->orders;
     }
 

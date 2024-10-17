@@ -384,7 +384,7 @@ class Order
 
         switch ($this->getSide()) {
             case Side::Buy:
-                $result[] = "{$this->getRealExecutedQuantity()} {$this->getCoin()->getByBitCode()} за {$this->getQuantity()} USDT";
+                $result[] = "{$this->getRealExecutedQuantity()} {$this->getCoin()->getByBitCode()} по {$this->getAveragePrice()} USDT";
                 break;
             case Side::Sell:
                 $result[] = "{$this->getQuantity()} {$this->getCoin()->getByBitCode()}";
