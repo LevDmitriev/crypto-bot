@@ -49,7 +49,7 @@ class Position
 
     #[Gedmo\Timestampable(on: 'change', field: ['status', 'orders'])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    protected $updatedAt;
+    protected $updatedAt = null;
 
 
     public function getId(): ?string

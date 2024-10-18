@@ -108,9 +108,9 @@ class Order
     #[ORM\JoinColumn(nullable: false)]
     private ?Position $position = null;
 
-    #[Gedmo\Timestampable(on: 'change', field: ['status', 'byBitStatus', 'triggerPrice', 'quantity'])]
+    #[Gedmo\Timestampable(on: 'change', field: ['status', 'byBitStatus', 'triggerPrice', 'quantity', 'price'])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    protected $updatedAt;
+    protected $updatedAt = null;
 
 
     public function getId(): ?string
