@@ -19,7 +19,7 @@ class CoinCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         return [
-            IdField::new('id')->hideOnForm(),
+            IdField::new('id')->hideOnForm()->hideOnIndex(),
             TextField::new('byBitCode', "Код в ByBit"),
         ];
     }
