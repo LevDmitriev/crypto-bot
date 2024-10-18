@@ -61,7 +61,6 @@ class PositionEventSubscriber implements EventSubscriberInterface
         $this->commandBus->dispatch(
             new CreateOrderToPositionCommand(
                 positionId: $position->getId(),
-                coinId:     $position->getCoin()->getId(),
                 quantity:   $position->getNotSoldQuantity(),
                 side:       Side::Sell
             ),

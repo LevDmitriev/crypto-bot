@@ -133,7 +133,6 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $this->commandBus->dispatch(
                 new CreateOrderToPositionCommand(
                     positionId:   $position->getId(),
-                    coinId:       $coin->getId(),
                     quantity:     $buyOrder->getRealExecutedQuantity(),
                     triggerPrice: $stopPrice,
                     side:         Side::Sell,

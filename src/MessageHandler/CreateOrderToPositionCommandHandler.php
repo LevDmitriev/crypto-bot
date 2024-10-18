@@ -19,7 +19,6 @@ readonly class CreateOrderToPositionCommandHandler
     public function __construct(
         private PositionRepository $positionRepository,
         private EntityManagerInterface $entityManager,
-        private CoinRepository $coinRepository,
         private OrderFactory $orderFactory,
     ) {
     }
@@ -27,10 +26,9 @@ readonly class CreateOrderToPositionCommandHandler
     public function __invoke(CreateOrderToPositionCommand $command)
     {
         $position = $this->positionRepository->find($command->positionId);
-        $coin = $this->coinRepository->find($command->coinId);
-        if ($position && $coin) {
+        if ($position) {
             $order = $this->orderFactory->create(
-                coin:         $coin,
+                coin:         $position->getCoin(),
                 quantity:     $command->quantity,
                 price:        $command->price,
                 triggerPrice: $command->triggerPrice,
