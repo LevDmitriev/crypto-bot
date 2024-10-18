@@ -42,7 +42,7 @@ class TradeCommand extends Command
             $coins = $this->coinRepository->createQueryBuilder('c')->getQuery()->toIterable();
             /** @var Coin $coin */
             foreach ($coins as $coin) {
-                $strategy = $this->tradingStrategyFactory->get($input->getArgument('strategy'), $coin);
+                $strategy = $this->tradingStrategyFactory->get($input->getArgument('strategy'));
                 try {
                     $strategy->openPositionIfPossible($coin);
                 } catch (HttpException $exception) {
@@ -51,8 +51,10 @@ class TradeCommand extends Command
                     }
                     $output->writeln("{$coin->getByBitCode()}: {$exception->getMessage()}");
                 }
-                $this->entityManager->clear();
+                $this->entityManager->detach($coin);
             }
+            $this->entityManager->clear();
+            gc_collect_cycles();
         }
 
         return self::SUCCESS;
