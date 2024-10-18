@@ -7,7 +7,7 @@ namespace App\Command;
 use App\Bybit\ErrorCodes;
 use App\Entity\Coin;
 use App\Repository\CoinRepository;
-use App\TradingStrategy\TradingStrategyFactoryInterface;
+use App\TradingStrategy\TradingStrategyRepositoryInterface;
 use ByBit\SDK\Exceptions\HttpException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -23,10 +23,9 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class TradeCommand extends Command
 {
     public function __construct(
-        private readonly TradingStrategyFactoryInterface $tradingStrategyFactory,
+        private readonly TradingStrategyRepositoryInterface $tradingStrategyFactory,
         private readonly CoinRepository $coinRepository,
         private readonly EntityManagerInterface $entityManager,
-        private readonly EventDispatcherInterface $eventDispatcher
     ) {
         parent::__construct('app:trade');
     }
@@ -43,22 +42,14 @@ class TradeCommand extends Command
             $coins = $this->coinRepository->createQueryBuilder('c')->getQuery()->toIterable();
             /** @var Coin $coin */
             foreach ($coins as $coin) {
-                $strategy = $this->tradingStrategyFactory->create($input->getArgument('strategy'), $coin);
-                if ($strategy instanceof EventSubscriberInterface) {
-                    $this->eventDispatcher->addSubscriber($strategy);
-                }
+                $strategy = $this->tradingStrategyFactory->get($input->getArgument('strategy'), $coin);
                 try {
-                    $strategy->dispatchEvents();
+                    $strategy->openPositionIfPossible($coin);
                 } catch (HttpException $exception) {
                     if (!in_array($exception->getCode(), [ErrorCodes::NOT_SUPPORTED_SYMBOLS, ErrorCodes::INVALID_SERVER_TIMESTAMP])) {
                         throw $exception;
                     }
                     $output->writeln("{$coin->getByBitCode()}: {$exception->getMessage()}");
-                }
-                finally {
-                    if ($strategy instanceof EventSubscriberInterface) {
-                        $this->eventDispatcher->removeSubscriber($strategy);
-                    }
                 }
                 $this->entityManager->clear();
             }

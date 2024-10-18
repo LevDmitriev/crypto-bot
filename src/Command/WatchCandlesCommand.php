@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Command;
 
 use App\Market\Model\Candle;
-use App\TradingStrategy\TradingStrategyFactoryInterface;
+use App\TradingStrategy\TradingStrategyRepositoryInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -25,7 +25,7 @@ class WatchCandlesCommand extends Command
     public function __construct(
         //        #[Autowire(service: 'app.serializer.bybit')]
         private readonly DenormalizerInterface $denormalizer,
-        private readonly TradingStrategyFactoryInterface $tradingStrategyFactory,
+        private readonly TradingStrategyRepositoryInterface $tradingStrategyFactory,
     ) {
         parent::__construct('app:kline:watch');
     }
@@ -43,7 +43,7 @@ class WatchCandlesCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $strategy = $this->tradingStrategyFactory->create($input->getOption('strategy'));
+        $strategy = $this->tradingStrategyFactory->get($input->getOption('strategy'));
         $topic = $input->getOption('topic');
         $client = new Client("wss://stream.bybit.com/v5/public/spot");
         $client->send(new Text(json_encode(["op" => "subscribe", 'args' => [$topic]])));

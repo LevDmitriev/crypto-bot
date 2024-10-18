@@ -28,8 +28,12 @@ services:
         arguments:
             $key: 'rMYSYkIoDbFrWY8cEU'
             $secret: 'S0BvBGFeqz6OsXIMJ7NxQt1FaAgNcuJQoSOg'
-    App\TradingStrategy\TradingStrategyFactoryInterface:
-        class: App\TradingStrategy\TradingStrategyFactory
+    app.trading_strategy.catch_pump:
+        class: App\TradingStrategy\CatchPump\Strategy\CatchPumpStrategy
+    App\TradingStrategy\TradingStrategyRepositoryInterface:
+        class: App\TradingStrategy\TradingStrategyRepository
+        calls:
+            - add: ['catch-pump', '@app.trading_strategy.catch_pump']
     App\Market\Repository\CandleRepository:
         arguments:
             $marketApi:  '@=service("ByBit\\SDK\\ByBitApi").marketApi()'

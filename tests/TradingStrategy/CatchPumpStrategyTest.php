@@ -462,7 +462,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             lockFactory: $lockFactory
         );
         $strategy->sell50Percent(new LastTwoHoursPriceChangedEvent($position, 8));
-        $order = $position->getOrders()->last();
+        $order = $position->getOrdersCollection()->last();
         self::assertEquals('1.0000', $order->getQuantity());
         self::assertEquals('102.0000', $stopOrder->getTriggerPrice());
         self::assertEquals($coin, $order->getCoin());
@@ -513,7 +513,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             lockFactory: $lockFactory
         );
         $strategy->sell25Percent(new LastTwoHoursPriceChangedEvent($position, 12));
-        $order = $position->getOrders()->last();
+        $order = $position->getOrdersCollection()->last();
         self::assertEquals('1.0000', $order->getQuantity());
         self::assertEquals('1082.0000', $stopOrder->getTriggerPrice());
         self::assertEquals($coin, $order->getCoin());
@@ -561,7 +561,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             lockFactory: $lockFactory
         );
         $position = $strategy->openPosition();
-        $buyOrder = $position->getOrders()->first();
+        $buyOrder = $position->getOrdersCollection()->first();
         self::assertEquals('51.000112', $buyOrder->getQuantity());
         self::assertEquals(Type::Market, $buyOrder->getType());
     }

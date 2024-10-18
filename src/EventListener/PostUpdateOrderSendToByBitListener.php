@@ -42,7 +42,7 @@ readonly class PostUpdateOrderSendToByBitListener
             in_array('quantity', $fieldsNames, true)
             || in_array('price', $fieldsNames, true)
             || in_array('triggerPrice', $fieldsNames, true)
-            )) {
+        )) {
             $orderArray = [
                 'orderLinkId' => (string) $order->getId(),
                 'symbol' => $order->getCoin()->getByBitCode() . 'USDT',

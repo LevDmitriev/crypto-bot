@@ -2,6 +2,7 @@
 
 namespace App\TradingStrategy;
 
+use App\Entity\Coin;
 use App\Entity\Position;
 
 /**
@@ -10,8 +11,16 @@ use App\Entity\Position;
 interface TradingStrategyInterface
 {
     /**
-     * Проанализировать данные и отстрелить все необходимые события.
+     * Открыть позицию, если возможно
+     * @return Position|null
+     */
+    public function openPositionIfPossible(Coin $coin): ?Position;
+
+    /**
+     * Обработать позицию
+     * @param Position $position
+     *
      * @return void
      */
-    public function dispatchEvents(): void;
+    public function handlePosition(Position $position): void;
 }

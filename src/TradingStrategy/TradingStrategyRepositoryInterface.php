@@ -7,7 +7,7 @@ use App\Entity\Coin;
 /**
  * Фабрика торговых стратегий
  */
-interface TradingStrategyFactoryInterface
+interface TradingStrategyRepositoryInterface
 {
-    public function create(string $name, Coin $coin): TradingStrategyInterface;
+    public function get(string $name): TradingStrategyInterface;
 }
