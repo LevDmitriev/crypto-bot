@@ -20,7 +20,7 @@ readonly class HandleOpenedPositionsTask
     ) {
     }
 
-    public function __invoke()
+    public function __invoke() : void
     {
         $positions = $this->positionRepository->findAllNotClosed();
         foreach ($positions as $position) {

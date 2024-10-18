@@ -24,7 +24,7 @@ readonly class CloseAllPositionsTask
     ) {
     }
 
-    public function __invoke()
+    public function __invoke() : void
     {
         // На всякий случай отменяем всё
         $this->byBitApi->tradeApi()->cancelAllOrders(['category' => Category::spot->value, 'orderFilter' => OrderFilter::Order->value]);
