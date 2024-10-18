@@ -47,7 +47,7 @@ class Position
     #[ORM\JoinColumn(nullable: false)]
     private ?Coin $coin = null;
 
-    #[Gedmo\Timestampable(on: 'change', field: ['status', 'orders'])]
+    #[Gedmo\Timestampable(on: 'change', field: ['id', 'status', 'orders'])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     protected $updatedAt = null;
 
