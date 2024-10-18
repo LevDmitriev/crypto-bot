@@ -80,8 +80,12 @@ class Position
      */
     public function getAveragePrice(): string
     {
-        // todo когда будет массив больше 1 - переделать
-        return $this->orders->findFirst(fn (int $key, Order $order) => $order->getSide() === Side::Buy)->getAveragePrice();
+        $buyOrders = $this->orders->filter(fn (Order $order) => $order->getSide() === Side::Buy);
+        assert($buyOrders->count() > 0);
+        // Суммируем цены
+        $totalPrice = $buyOrders->reduce(fn ($carry, Order $order) => bcadd($carry, $order->getAveragePrice(), 6), '0');
+        // Рассчитываем среднюю цену
+        return bcdiv($totalPrice, (string) $buyOrders->count(), 6);
     }
 
     /**
