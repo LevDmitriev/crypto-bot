@@ -9,10 +9,12 @@ use App\Entity\Order\ByBit\Side;
 use App\Entity\Order\ByBit\Type;
 use App\Entity\Order\Status;
 use App\Repository\PositionRepository;
+use Doctrine\DBAL\Types\Types;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\Entity(repositoryClass: PositionRepository::class)]
 #[ORM\Table(name: 'orders')]
@@ -105,6 +107,11 @@ class Order
     #[ORM\ManyToOne(inversedBy: 'orders')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Position $position = null;
+
+    #[Gedmo\Timestampable(on: 'change', field: ['status', 'byBitStatus', 'triggerPrice', 'quantity'])]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    protected $updatedAt;
+
 
     public function getId(): ?string
     {

@@ -7,10 +7,12 @@ use App\Entity\Order\Status;
 use App\Repository\PositionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\PersistentCollection;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\Table(name: 'positions')]
 #[ORM\Entity(repositoryClass: PositionRepository::class)]
@@ -44,6 +46,10 @@ class Position
     #[ORM\ManyToOne(inversedBy: 'positions')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Coin $coin = null;
+
+    #[Gedmo\Timestampable(on: 'change', field: ['status', 'orders'])]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    protected $updatedAt;
 
 
     public function getId(): ?string
