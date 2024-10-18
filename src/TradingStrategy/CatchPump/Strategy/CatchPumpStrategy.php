@@ -28,8 +28,7 @@ use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\DelayStamp;
-use Symfony\Component\Validator\Constraints\DateTime;
+use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -139,7 +138,8 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                     triggerPrice: $stopPrice,
                     side:         Side::Sell,
                     orderFilter:  OrderFilter::StopOrder
-                )
+                ),
+                [new TransportMessageIdStamp("create_order_to_position_{$position->getId()}")]
             );
         } else {
             $this->positionStateMachine->apply($position, 'close');

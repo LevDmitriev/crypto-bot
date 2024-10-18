@@ -8,6 +8,7 @@ use App\Messages\ClosePositionCommand;
 use App\Repository\PositionRepository;
 use ByBit\SDK\ByBitApi;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Symfony\Component\Scheduler\Attribute\AsCronTask;
 
 /**
@@ -29,7 +30,10 @@ readonly class CloseAllPositionsTask
         $this->byBitApi->tradeApi()->cancelAllOrders(['category' => Category::spot->value, 'orderFilter' => OrderFilter::Order->value]);
         $this->byBitApi->tradeApi()->cancelAllOrders(['category' => Category::spot->value, 'orderFilter' => OrderFilter::StopOrder->value]);
         foreach ($this->positionRepository->findAllNotClosed() as $position) {
-            $this->commandBus->dispatch(new ClosePositionCommand($position->getId()));
+            $this->commandBus->dispatch(
+                new ClosePositionCommand($position->getId()),
+                [new TransportMessageIdStamp("close_position_{$position->getId()}")]
+            );
         }
     }
 }

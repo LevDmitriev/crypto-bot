@@ -9,6 +9,7 @@ use App\Entity\Position;
 use App\Messages\CreateOrderToPositionCommand;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Symfony\Component\Workflow\Event\TransitionEvent;
 use Symfony\Component\Workflow\WorkflowInterface;
 
@@ -63,7 +64,8 @@ class PositionEventSubscriber implements EventSubscriberInterface
                 coinId:     $position->getCoin()->getId(),
                 quantity:   $position->getNotSoldQuantity(),
                 side:       Side::Sell
-            )
+            ),
+            [new TransportMessageIdStamp("create_order_to_position_{$position->getId()}")]
         );
     }
 }

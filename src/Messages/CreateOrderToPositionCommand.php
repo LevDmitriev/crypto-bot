@@ -15,7 +15,7 @@ readonly class CreateOrderToPositionCommand
 {
     public function __construct(
         public string $positionId,
-        public int $coinId,
+        public string $coinId,
         public ?string $quantity = null,
         public ?string $price = null,
         public ?string $triggerPrice = null,

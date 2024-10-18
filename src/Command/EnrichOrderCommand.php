@@ -16,6 +16,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 
 /**
  * Обогатить приказы данными из ByBit
@@ -46,7 +47,10 @@ class EnrichOrderCommand extends Command
             $ordersIds = array_column($ordersIds, 'id');
         }
         foreach ($ordersIds as $orderId) {
-            $this->commandBus->dispatch(new EnrichOrderFromByBitCommand($orderId));
+            $this->commandBus->dispatch(
+                new EnrichOrderFromByBitCommand($orderId),
+                [new TransportMessageIdStamp("enrich_order_$orderId")]
+            );
             $this->entityManager->clear();
         }
         return self::SUCCESS;

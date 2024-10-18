@@ -5,8 +5,6 @@ namespace App\MessageHandler;
 use App\Messages\HandlePositionCommand;
 use App\Repository\PositionRepository;
 use App\TradingStrategy\TradingStrategyRepositoryInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 /**
