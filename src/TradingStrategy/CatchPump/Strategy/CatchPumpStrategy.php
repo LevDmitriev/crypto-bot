@@ -178,10 +178,8 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 $buyOrder = $orders->filterBuyOrders()->first();
                 $stopOrder = $orders->filterStopOrders()->first();
                 $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.002', 6);
-                if ($stopOrder->getTriggerPrice() !== $triggerPrice) {
-                    $stopOrder->setTriggerPrice($triggerPrice);
-                    $this->entityManager->persist($stopOrder);
-                }
+                $stopOrder->setTriggerPrice($triggerPrice);
+                $this->entityManager->persist($stopOrder);
             }
         });
     }
@@ -252,7 +250,6 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.102', 6);
                 $stopOrder->setTriggerPrice($triggerPrice);
                 $this->entityManager->persist($stopOrder);
-                $this->entityManager->flush();
             }
         });
     }
