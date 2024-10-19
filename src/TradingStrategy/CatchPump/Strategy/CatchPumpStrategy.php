@@ -187,21 +187,25 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function sell50Percent(LastTwoHoursPriceChangedEvent $event): void
     {
-        $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($event) {
-            $lockKey = self::NAME."-position-price-increased-8percent-{$event->position->getId()}";
-            $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-            if ($event->changePercent >= 8 && $lock->acquire()) {
-                $orders = $event->position->getOrdersCollection();
-                $buyOrder = $orders->filterBuyOrders()->first();
-                $quantityForSale = bcdiv($buyOrder->getRealExecutedQuantity(), '2', 6);
-                $stopOrder = $orders->filterStopOrders()->first();
-                $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.02', 6));
-                $order = $this->orderFactory->create(coin: $event->position->getCoin(), quantity: $quantityForSale, side: Side::Sell);
-                $order->setPosition($event->position);
-                $entityManager->persist($order);
-            }
-        });
-
+        $this->entityManager->beginTransaction();
+        $lockKey = self::NAME."-position-price-increased-8percent-{$event->position->getId()}";
+        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+        if ($event->changePercent >= 8 && $lock->acquire()) {
+            $orders = $event->position->getOrdersCollection();
+            $buyOrder = $orders->filterBuyOrders()->first();
+            $quantityForSale = bcdiv($buyOrder->getRealExecutedQuantity(), '2', 6);
+            $stopOrder = $orders->filterStopOrders()->first();
+            $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.02', 6));
+            $stopOrder->setQuantity(bcsub($stopOrder->getQuantity(), $quantityForSale, 6));
+            // Сначала обновляем стоп-приказ, а потом добавляем новый. Порядок важен.
+            $this->entityManager->persist($stopOrder);
+            $this->entityManager->flush();
+            $order = $this->orderFactory->create(coin: $event->position->getCoin(), quantity: $quantityForSale, side: Side::Sell);
+            $order->setPosition($event->position);
+            $this->entityManager->persist($order);
+            $this->entityManager->flush();
+        }
+        $this->entityManager->commit();
     }
     /**
      * Выставить приказ на продажу 25% позиции
@@ -211,20 +215,25 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
      */
     public function sell25Percent(LastTwoHoursPriceChangedEvent $event): void
     {
-        $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($event) {
-            $lockKey = self::NAME."-position-price-increased-12percent-{$event->position->getId()}";
-            $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-            if ($event->changePercent >= 12 && $lock->acquire()) {
-                $orders = $event->position->getOrdersCollection();
-                $buyOrder = $orders->filterBuyOrders()->first();
-                $quantityForSale = bcdiv($buyOrder->getQuantity(), '4', 6);
-                $stopOrder = $orders->filterStopOrders()->first();
-                $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.082', 6));
-                $order = $this->orderFactory->create(coin: $event->position->getCoin(), quantity: $quantityForSale, side: Side::Sell);
-                $order->setPosition($event->position);
-                $entityManager->persist($order);
-            }
-        });
+        $this->entityManager->beginTransaction();
+        $lockKey = self::NAME."-position-price-increased-12percent-{$event->position->getId()}";
+        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
+        if ($event->changePercent >= 12 && $lock->acquire()) {
+            $orders = $event->position->getOrdersCollection();
+            $buyOrder = $orders->filterBuyOrders()->first();
+            $quantityForSale = bcdiv($buyOrder->getRealExecutedQuantity(), '4', 6);
+            $stopOrder = $orders->filterStopOrders()->first();
+            $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.082', 6));
+            $stopOrder->setQuantity(bcsub($stopOrder->getQuantity(), $quantityForSale, 6));
+            // Сначала обновляем стоп-приказ, а потом добавляем новый. Порядок важен.
+            $this->entityManager->persist($stopOrder);
+            $this->entityManager->flush();
+            $order = $this->orderFactory->create(coin: $event->position->getCoin(), quantity: $quantityForSale, side: Side::Sell);
+            $order->setPosition($event->position);
+            $this->entityManager->persist($order);
+            $this->entityManager->flush();
+        }
+        $this->entityManager->commit();
     }
 
     /**

@@ -61,7 +61,7 @@ readonly class PostUpdateOrderSendToByBitListener
             }
 
             try {
-                $this->byBitApi->tradeApi()->amendOrder($orderArray);
+                $this->amendOrder($orderArray);
             } catch (HttpException $exception) {
                 /*
                  * Есть очень специфическая незадокументированная ошибка.
@@ -74,6 +74,34 @@ readonly class PostUpdateOrderSendToByBitListener
                     throw $exception;
                 }
             }
+        }
+    }
+
+    private function amendOrder(array $order): void
+    {
+        try {
+            $this->byBitApi->tradeApi()->amendOrder($order);
+        } catch (HttpException $e) {
+            /*
+             * У разных монет есть своя кратность и можем получить ошибку что слишком много символов после запятой.
+             * todo вынести в настройки монеты
+             * Пока что постепенно отрезаем числа после запятой
+             */
+            if ($e->getCode() === ErrorCodes::ORDER_QUANTITY_HAS_TOO_MANY_DECIMALS) {
+                $order['qty'] = substr($order['qty'], 0, -1);
+                $this->amendOrder($order);
+            }
+            /*
+                 * Есть очень специфическая незадокументированная ошибка.
+                 * Если отправить приказ на обновление, но в нём ничего не изменить,
+                 * возвращается ошибка 10001, но у неё совершенно другое сообщение об ошибке:
+                 * The order remains unchanged as the parameters entered match the existing ones.
+                 * Игнорируем такую ошибку
+                 */
+            if ($e->getCode() === ErrorCodes::NOT_SUPPORTED_SYMBOLS) {
+                return ;
+            }
+            throw $e;
         }
     }
 }
