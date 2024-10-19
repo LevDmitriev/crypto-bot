@@ -41,7 +41,9 @@ readonly class EnrichOrderFromByBitHandler
             $orderFromApi = isset($orderFromApi['list'][0]) ? $orderFromApi['list'][0] : $orderFromApi;
             if (isset($orderFromApi['orderStatus']) && ByBitStatus::isClosedStatus(ByBitStatus::from($orderFromApi['orderStatus']))) {
                 $order = $this->denormalizer->denormalize($orderFromApi, Order::class, '[]', [AbstractNormalizer::OBJECT_TO_POPULATE => $order]);
-                $this->entityManager->persist($order);
+                if ($this->entityManager->getUnitOfWork()->getEntityChangeSet($order)) {
+                    $this->entityManager->persist($order);
+                }
                 return;
             }
             throw new RecoverableMessageHandlingException("Ждём когда приказ будет выполнен");

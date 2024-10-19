@@ -37,8 +37,8 @@ readonly class CreateOrderToPositionCommandHandler
                 type:         $command->type,
                 orderFilter:  $command->orderFilter
             );
-            $position->addOrder($order);
-            $this->entityManager->persist($position);
+            $order->setPosition($position);
+            $this->entityManager->persist($order);
         }
     }
 }
