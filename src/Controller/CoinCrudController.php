@@ -19,7 +19,7 @@ class CoinCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         return [
-            TextField::new('code', "Код в ByBit"),
+            TextField::new('id', "Код в ByBit"),
         ];
     }
 }
