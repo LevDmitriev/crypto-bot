@@ -272,7 +272,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $client->send(new Text(json_encode(["op" => "subscribe", 'args' => [$topic]])));
             $client
                 ->setPersistent(true)
-                ->onText(function (Client $client, Connection $connection, Message $message) use ($position, $is2HoursExpired) {
+                ->onText(function (Client $client, Connection $connection, Message $message) use ($position) {
                     $json = json_decode($message->getContent(), true);
                     $this->entityManager->refresh($position);
                     if ($lastTradedPrice = $json['data'][0]['close'] ?? null) {
