@@ -49,7 +49,7 @@ class TradeCommand extends Command
                     if (!in_array($exception->getCode(), [ErrorCodes::NOT_SUPPORTED_SYMBOLS, ErrorCodes::INVALID_SERVER_TIMESTAMP])) {
                         throw $exception;
                     }
-                    $output->writeln("{$coin->getCode()}: {$exception->getMessage()}");
+                    $output->writeln("{$coin->getId()}: {$exception->getMessage()}");
                 }
                 $this->entityManager->detach($coin);
             }

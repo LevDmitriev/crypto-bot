@@ -30,7 +30,7 @@ class PositionRepositoryTest extends KernelTestCase
         }
         $entityManager->flush();
         $coin = new Coin();
-        $coin->setCode(uniqid());
+        $coin->setId(uniqid());
         $entityManager->persist($coin);
         $entityManager->flush();
         $count = 2;
@@ -45,7 +45,7 @@ class PositionRepositoryTest extends KernelTestCase
         $closedPosition->setStrategyName(uniqid());
         $closedPosition->setStatus(Status::Closed->value);
         $positionWithDifferentCoin = new Position();
-        $positionWithDifferentCoin->setCoin((new Coin())->setCode(uniqid()));
+        $positionWithDifferentCoin->setCoin((new Coin())->setId(uniqid()));
         $positionWithDifferentCoin->setStrategyName(uniqid());
         $entityManager->persist($positionWithDifferentCoin);
         $entityManager->flush();
@@ -71,7 +71,7 @@ class PositionRepositoryTest extends KernelTestCase
         }
         $entityManager->flush();
         $coin = new Coin();
-        $coin->setCode(uniqid());
+        $coin->setId(uniqid());
         $entityManager->persist($coin);
         $entityManager->flush();
         $count = 2;
@@ -106,7 +106,7 @@ class PositionRepositoryTest extends KernelTestCase
         }
         $entityManager->flush();
         $coin = new Coin();
-        $coin->setCode(uniqid());
+        $coin->setId(uniqid());
         $entityManager->persist($coin);
         $entityManager->flush();
         for ($i = 0; $i < 2; $i++) {
@@ -121,7 +121,7 @@ class PositionRepositoryTest extends KernelTestCase
         $closedPosition->setStatus(Status::Closed->value);
         $entityManager->persist($closedPosition);
         $positionWithDifferentCoin = new Position();
-        $positionWithDifferentCoin->setCoin((new Coin())->setCode(uniqid()));
+        $positionWithDifferentCoin->setCoin((new Coin())->setId(uniqid()));
         $positionWithDifferentCoin->setStrategyName(uniqid());
         $entityManager->persist($positionWithDifferentCoin);
         $entityManager->flush();
@@ -145,7 +145,7 @@ class PositionRepositoryTest extends KernelTestCase
         }
         $entityManager->flush();
         $coin = new Coin();
-        $coin->setCode(uniqid());
+        $coin->setId(uniqid());
         $entityManager->persist($coin);
         $entityManager->flush();
         $count = 2;
@@ -160,13 +160,13 @@ class PositionRepositoryTest extends KernelTestCase
         $closedPosition->setStrategyName(uniqid());
         $closedPosition->setStatus(Status::Closed->value);
         $positionWithDifferentCoin = new Position();
-        $positionWithDifferentCoin->setCoin((new Coin())->setCode(uniqid()));
+        $positionWithDifferentCoin->setCoin((new Coin())->setId(uniqid()));
         $positionWithDifferentCoin->setStrategyName(uniqid());
         $entityManager->persist($positionWithDifferentCoin);
         $entityManager->persist($closedPosition);
         $entityManager->flush();
         $result = $positionRepository->findOneNotClosedByCoin($coin);
         self::assertNotNull($result);
-        self::assertEquals($coin->getCode(), $result->getCoin()->getCode());
+        self::assertEquals($coin->getId(), $result->getCoin()->getId());
     }
 }

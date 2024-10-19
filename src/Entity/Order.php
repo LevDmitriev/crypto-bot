@@ -281,7 +281,7 @@ class Order
 
     public function getSymbol(): string
     {
-        return $this->getCoin()?->getCode() . 'USDT';
+        return $this->getCoin()?->getId() . 'USDT';
     }
 
     public function getStopLossPrice(): ?string
@@ -391,10 +391,10 @@ class Order
 
         switch ($this->getSide()) {
             case Side::Buy:
-                $result[] = "{$this->getRealExecutedQuantity()} {$this->getCoin()->getCode()} по {$this->getAveragePrice()} USDT";
+                $result[] = "{$this->getRealExecutedQuantity()} {$this->getCoin()->getId()} по {$this->getAveragePrice()} USDT";
                 break;
             case Side::Sell:
-                $result[] = "{$this->getQuantity()} {$this->getCoin()->getCode()}";
+                $result[] = "{$this->getQuantity()} {$this->getCoin()->getId()}";
                 if ($this->getOrderFilter() === OrderFilter::StopOrder) {
                     $result[] = "по цене {$this->getTriggerPrice()}";
                 }

@@ -10,12 +10,11 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Table(name: 'coins')]
 #[ORM\Entity(repositoryClass: CoinRepository::class)]
-#[UniqueEntity(['byBitCode'])]
 class Coin
 {
     #[ORM\Id]
     #[ORM\Column(length: 255, nullable: false)]
-    private string $code;
+    private string $id;
 
     /**
      * @var Collection<int, Position>
@@ -28,20 +27,20 @@ class Coin
         $this->positions = new ArrayCollection();
     }
 
-    public function getCode(): string
+    public function getId(): string
     {
-        return $this->code;
+        return $this->id;
     }
 
-    public function setCode(string $code): static
+    public function setId(string $id): static
     {
-        $this->code = $code;
+        $this->id = $id;
 
         return $this;
     }
     public function __toString(): string
     {
-        return $this->code;
+        return $this->id;
     }
 
     /**

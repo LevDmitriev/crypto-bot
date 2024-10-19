@@ -60,7 +60,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $isTimeCorrect = time() < strtotime('today 18:50') && time() > strtotime('today 7:00');
         if ($isTimeCorrect && !$this->positionRepository->findOneNotClosedByCoin($coin) && $this->positionRepository->getTotalNotClosedCount() < 5) {
             /** @var CandleCollection $candles7hours 7 часовая свечка */
-            $candles7hours = $this->candleRepository->find(symbol: $coin->getCode() . 'USDT', interval: '15', limit: 28);
+            $candles7hours = $this->candleRepository->find(symbol: $coin->getId() . 'USDT', interval: '15', limit: 28);
             /** @var CandleCollection $candles7hoursExceptLast15Minutes 7 часовая свечка не включая последние 15 минут */
             $candles7hoursExceptLast15Minutes = new CandleCollection($candles7hours->slice(1, 27));
             /** @var CandleInterface $candleLast15minutes Последняя 15 минутная свечка */
@@ -83,7 +83,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 /** @var bool $isPriceChangedEnough Цена изменилась достаточно? */
                 $isPriceChangedEnough = \bccomp($priceChangePercent, '2', 0) >= 0;
                 $result = $isVolumeChangedEnough && $isPriceChangedEnough;
-                $message = "Обработана монета {$coin->getCode()}. ";
+                $message = "Обработана монета {$coin->getId()}. ";
                 if (!$isPriceChangedEnough) {
                     $message .= "Цена изменилась на $priceChangePercent";
                 } elseif (!$isVolumeChangedEnough) {
@@ -103,9 +103,9 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $walletBalance = $this->accountRepository->getWalletBalance();
         /** @var string $risk Риск в $ */
         $risk = bcmul('0.01', $walletBalance->totalEquity, $scale);
-        $lastHourCandle = $this->candleRepository->find(symbol: $coin->getCode() . 'USDT', interval: '60', limit: 1);
+        $lastHourCandle = $this->candleRepository->find(symbol: $coin->getId() . 'USDT', interval: '60', limit: 1);
         $stopAtr = bcsub($lastHourCandle->getHighestPrice(), $lastHourCandle->getLowestPrice(), $scale);
-        $lastTradedPrice = $this->candleRepository->getLastTradedPrice($coin->getCode() . 'USDT');
+        $lastTradedPrice = $this->candleRepository->getLastTradedPrice($coin->getId() . 'USDT');
         $stopPrice = bcsub($lastTradedPrice, bcmul($stopAtr, '2', $scale), $scale);
         $stopPercent = bcmul(
             bcdiv(
@@ -267,7 +267,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         /** @var callable $is2HoursExpired Истекло 2 часа от входа в позицию?  */
         $is2HoursExpired = fn () => (time() - $position->getCreatedAt()->getTimestamp()) > 7200;
         if (!$is2HoursExpired()) {
-            $topic = "kline.1.{$position->getCoin()->getCode()}USDT";
+            $topic = "kline.1.{$position->getCoin()->getId()}USDT";
             $client = new Client("wss://stream.bybit.com/v5/public/spot");
             $client->send(new Text(json_encode(["op" => "subscribe", 'args' => [$topic]])));
             $client

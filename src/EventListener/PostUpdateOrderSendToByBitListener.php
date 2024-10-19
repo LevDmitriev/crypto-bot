@@ -45,7 +45,7 @@ readonly class PostUpdateOrderSendToByBitListener
         )) {
             $orderArray = [
                 'orderLinkId' => (string) $order->getId(),
-                'symbol' => $order->getCoin()->getCode() . 'USDT',
+                'symbol' => $order->getCoin()->getId() . 'USDT',
                 'category' => $order->getCategory()->value,
             ];
 
