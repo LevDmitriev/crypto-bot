@@ -291,6 +291,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                     }
                 })
                 ->onTick(fn (Client $client) => $is2HoursExpired() && $client->disconnect())
+                ->onTick(fn (Client $client) => $position->isClosed() && $client->disconnect())
                 ->start();
         }
     }
