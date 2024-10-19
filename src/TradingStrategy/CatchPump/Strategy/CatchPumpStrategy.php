@@ -135,14 +135,23 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 orderFilter:  OrderFilter::StopOrder
             );
             $position->addOrder($stopOrder);
+            try {
+                $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position) {
+                    $this->positionStateMachine->apply($position, 'open');
+                    $entityManager->persist($position);
+                });
+            } catch (\Throwable $exception) {
+                $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position) {
+                    $this->positionStateMachine->apply($position, 'close');
+                    $entityManager->persist($position);
+                });
+                throw $exception;
+            }
+        } else {
             $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position) {
-                $this->positionStateMachine->apply($position, 'open');
+                $this->positionStateMachine->apply($position, 'close');
                 $entityManager->persist($position);
             });
-        } else {
-            $this->positionStateMachine->apply($position, 'close');
-            $this->entityManager->persist($position);
-            $this->entityManager->flush();
         }
 
         return $position;
