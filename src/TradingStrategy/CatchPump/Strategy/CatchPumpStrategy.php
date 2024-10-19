@@ -123,38 +123,23 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $position->setCoin($coin);
         $position->addOrder($buyOrder);
         $position->setStrategyName(static::NAME);
-        $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position, $buyOrder) {
-            $entityManager->persist($position);
-            $entityManager->persist($buyOrder);
-        });
-        if ($buyOrder->isFilled()) {
-            $stopOrder = $this->orderFactory->create(
-                coin: $position->getCoin(),
-                quantity: $buyOrder->getRealExecutedQuantity(),
-                triggerPrice: $stopPrice,
-                side: Side::Sell,
-                orderFilter:  OrderFilter::StopOrder
-            );
-            $stopOrder->setPosition($position);
-            try {
-                $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position, $stopOrder) {
-                    $this->positionStateMachine->apply($position, 'open');
-                    $entityManager->persist($position);
-                    $entityManager->persist($stopOrder);
-                });
-            } catch (\Throwable $exception) {
-                $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position) {
-                    $this->positionStateMachine->apply($position, 'close');
-                    $entityManager->persist($position);
-                });
-                throw $exception;
-            }
-        } else {
-            $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position) {
-                $this->positionStateMachine->apply($position, 'close');
-                $entityManager->persist($position);
-            });
-        }
+        $this->entityManager->beginTransaction();
+        $this->entityManager->persist($position);
+        $this->entityManager->persist($buyOrder);
+        $this->entityManager->flush();
+        $stopOrder = $this->orderFactory->create(
+            coin: $position->getCoin(),
+            quantity: $buyOrder->getRealExecutedQuantity(),
+            triggerPrice: $stopPrice,
+            side: Side::Sell,
+            orderFilter:  OrderFilter::StopOrder
+        );
+        $position->addOrder($stopOrder);
+        $this->positionStateMachine->apply($position, 'open');
+        $this->entityManager->persist($position);
+        $this->entityManager->persist($stopOrder);
+        $this->entityManager->flush();
+        $this->entityManager->commit();
 
         return $position;
     }
