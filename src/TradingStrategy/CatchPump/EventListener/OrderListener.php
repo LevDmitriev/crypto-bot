@@ -5,6 +5,7 @@ namespace App\TradingStrategy\CatchPump\EventListener;
 use App\Entity\Order;
 use App\TradingStrategy\CatchPump\Strategy\CatchPumpStrategy;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Symfony\Component\Workflow\WorkflowInterface;
 
@@ -12,7 +13,8 @@ use Symfony\Component\Workflow\WorkflowInterface;
 class OrderListener
 {
     public function __construct(
-        private WorkflowInterface $positionStateMachine
+        private WorkflowInterface $positionStateMachine,
+        private EntityManagerInterface $entityManager
     ) {
     }
 
@@ -25,8 +27,10 @@ class OrderListener
     public function closePosition(Order $order): void
     {
         if ($order->getPosition()?->getStrategyName() === CatchPumpStrategy::NAME) {
-            if ($order->isStop() && !$order->isNew() && $this->positionStateMachine->can($order->getPosition(), 'close')) {
+            if ($order->isStop() && $order->isFilled() && $this->positionStateMachine->can($order->getPosition(), 'close')) {
                 $this->positionStateMachine->apply($order->getPosition(), 'close');
+                $this->entityManager->persist($order->getPosition());
+                $this->entityManager->flush();
             }
         }
     }
