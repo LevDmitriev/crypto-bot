@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Entity\Position;
 use App\Entity\Position\Status;
 use App\Repository\PositionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -35,12 +37,14 @@ class HandlePositionsCommand extends Command
         $runningProcesses = new ArrayCollection();
         while (true) {
             // Ищем все открытые позиции, которые ещё не обрабатываем
-            $criteria = Criteria::create()
-                ->andWhere(Criteria::expr()->notIn('id', $runningProcesses->getKeys()))
-                ->andWhere(Criteria::expr()->eq('status', Status::Opened))
-            ;
+            $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('status', Status::Opened));
+            if ($runningProcesses->count()) {
+                $criteria->andWhere(Criteria::expr()->notIn('id', $runningProcesses->getKeys()));
+            }
+            /** @var Collection<int, Position> $positions */
             $positions = $this->positionRepository->matching($criteria);
             foreach ($positions as $position) {
+                $symfonyStyle->writeln("Запуск обработки позиции {$position->getId()}");
                 $subProcess = new PhpSubprocess(["bin/console", "app:position:handle", $position->getId()], timeout: 0);
                 $subProcess->start(function (string $type, string $buffer) use ($symfonyStyle): void {
                     if (Process::ERR === $type) {
