@@ -5,32 +5,29 @@ declare(strict_types=1);
 namespace App\TradingStrategy\CatchPump\Strategy;
 
 use App\Entity\Coin;
-use App\Entity\Order;
 use App\Entity\Order\ByBit\OrderFilter;
 use App\Entity\Order\ByBit\Side;
 use App\Entity\Position;
-use App\Entity\Position\Status;
 use App\Factory\OrderFactory;
 use App\Market\Model\CandleCollection;
 use App\Market\Model\CandleInterface;
 use App\Market\Repository\CandleRepositoryInterface;
-use App\Messages\ClosePositionCommand;
-use App\Messages\CreateOrderToPositionCommand;
 use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
 use App\TradingStrategy\CatchPump\Event\LastTwoHoursPriceChangedEvent;
 use App\TradingStrategy\TradingStrategyInterface;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use WebSocket\Client;
+use WebSocket\Connection;
+use WebSocket\Message\Message;
+use WebSocket\Message\Text;
 
 /**
  * Стратегия, которая пытается поймать момент, когда происходит
@@ -63,7 +60,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $isTimeCorrect = time() < strtotime('today 18:50') && time() > strtotime('today 7:00');
         if ($isTimeCorrect && !$this->positionRepository->findOneNotClosedByCoin($coin) && $this->positionRepository->getTotalNotClosedCount() < 5) {
             /** @var CandleCollection $candles7hours 7 часовая свечка */
-            $candles7hours = $this->candleRepository->find(symbol: $coin->getByBitCode() . 'USDT', interval: '15', limit: 28);
+            $candles7hours = $this->candleRepository->find(symbol: $coin->getCode() . 'USDT', interval: '15', limit: 28);
             /** @var CandleCollection $candles7hoursExceptLast15Minutes 7 часовая свечка не включая последние 15 минут */
             $candles7hoursExceptLast15Minutes = new CandleCollection($candles7hours->slice(1, 27));
             /** @var CandleInterface $candleLast15minutes Последняя 15 минутная свечка */
@@ -86,7 +83,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 /** @var bool $isPriceChangedEnough Цена изменилась достаточно? */
                 $isPriceChangedEnough = \bccomp($priceChangePercent, '2', 0) >= 0;
                 $result = $isVolumeChangedEnough && $isPriceChangedEnough;
-                $message = "Обработана монета {$coin->getByBitCode()}. ";
+                $message = "Обработана монета {$coin->getCode()}. ";
                 if (!$isPriceChangedEnough) {
                     $message .= "Цена изменилась на $priceChangePercent";
                 } elseif (!$isVolumeChangedEnough) {
@@ -106,9 +103,9 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $walletBalance = $this->accountRepository->getWalletBalance();
         /** @var string $risk Риск в $ */
         $risk = bcmul('0.01', $walletBalance->totalEquity, $scale);
-        $lastHourCandle = $this->candleRepository->find(symbol: $coin->getByBitCode() . 'USDT', interval: '60', limit: 1);
+        $lastHourCandle = $this->candleRepository->find(symbol: $coin->getCode() . 'USDT', interval: '60', limit: 1);
         $stopAtr = bcsub($lastHourCandle->getHighestPrice(), $lastHourCandle->getLowestPrice(), $scale);
-        $lastTradedPrice = $this->candleRepository->getLastTradedPrice($coin->getByBitCode() . 'USDT');
+        $lastTradedPrice = $this->candleRepository->getLastTradedPrice($coin->getCode() . 'USDT');
         $stopPrice = bcsub($lastTradedPrice, bcmul($stopAtr, '2', $scale), $scale);
         $stopPercent = bcmul(
             bcdiv(
@@ -126,22 +123,26 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $position->setCoin($coin);
         $position->addOrder($buyOrder);
         $position->setStrategyName(static::NAME);
-        $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position, $buyOrder, $stopPrice) {
+        $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position) {
             $entityManager->persist($position);
         });
         if ($buyOrder->isFilled()) {
-            $this->commandBus->dispatch(
-                new CreateOrderToPositionCommand(
-                    positionId:   $position->getId(),
-                    quantity:     $buyOrder->getRealExecutedQuantity(),
-                    triggerPrice: $stopPrice,
-                    side:         Side::Sell,
-                    orderFilter:  OrderFilter::StopOrder
-                ),
-                [new TransportMessageIdStamp("create_order_to_position_{$position->getId()}")]
+            $stopOrder = $this->orderFactory->create(
+                coin: $position->getCoin(),
+                quantity: $buyOrder->getRealExecutedQuantity(),
+                triggerPrice: $stopPrice,
+                side: Side::Sell,
+                orderFilter:  OrderFilter::StopOrder
             );
+            $position->addOrder($stopOrder);
+            $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($position) {
+                $this->positionStateMachine->apply($position, 'open');
+                $entityManager->persist($position);
+            });
         } else {
             $this->positionStateMachine->apply($position, 'close');
+            $this->entityManager->persist($position);
+            $this->entityManager->flush();
         }
 
         return $position;
@@ -263,14 +264,25 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
 
     public function handlePosition(Position $position): void
     {
-        $twoHours = 7200;
-        /** @var bool $is2HoursExpired Истекло 2 часа от входа в позицию?  */
-        $is2HoursExpired = (time() - $position->getCreatedAt()->getTimestamp()) > $twoHours;
-        if (!$is2HoursExpired) {
-            $lastTradedPrice = $this->candleRepository->getLastTradedPrice($position->getCoin()->getByBitCode() . 'USDT');
-            $averagePrice = $position->getAveragePrice();
-            $priceChangePercent = (float) bcmul(bcsub(bcdiv($lastTradedPrice, $averagePrice, 6), '1', 6), '100', 2);
-            $this->dispatcher->dispatch(new LastTwoHoursPriceChangedEvent($position, $priceChangePercent), LastTwoHoursPriceChangedEvent::NAME);
+        /** @var callable $is2HoursExpired Истекло 2 часа от входа в позицию?  */
+        $is2HoursExpired = fn () => (time() - $position->getCreatedAt()->getTimestamp()) > 7200;
+        if (!$is2HoursExpired()) {
+            $topic = "kline.1.{$position->getCoin()->getCode()}USDT";
+            $client = new Client("wss://stream.bybit.com/v5/public/spot");
+            $client->send(new Text(json_encode(["op" => "subscribe", 'args' => [$topic]])));
+            $client
+                ->setPersistent(true)
+                ->onText(function (Client $client, Connection $connection, Message $message) use ($position, $is2HoursExpired) {
+                    $json = json_decode($message->getContent(), true);
+                    $this->entityManager->refresh($position);
+                    if ($lastTradedPrice = $json['data'][0]['close'] ?? null) {
+                        $averagePrice = $position->getAveragePrice();
+                        $priceChangePercent = (float) bcmul(bcsub(bcdiv($lastTradedPrice, $averagePrice, 6), '1', 6), '100', 2);
+                        $this->dispatcher->dispatch(new LastTwoHoursPriceChangedEvent($position, $priceChangePercent), LastTwoHoursPriceChangedEvent::NAME);
+                    }
+                })
+                ->onTick(fn (Client $client) => $is2HoursExpired() && $client->disconnect())
+                ->start();
         }
     }
 }

@@ -14,13 +14,8 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 class Coin
 {
     #[ORM\Id]
-    #[ORM\Column]
-    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
-    #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
-    private ?string $id = null;
-
     #[ORM\Column(length: 255, nullable: false)]
-    private string $byBitCode;
+    private string $code;
 
     /**
      * @var Collection<int, Position>
@@ -33,25 +28,20 @@ class Coin
         $this->positions = new ArrayCollection();
     }
 
-    public function getId(): ?string
+    public function getCode(): string
     {
-        return $this->id;
+        return $this->code;
     }
 
-    public function getByBitCode(): string
+    public function setCode(string $code): static
     {
-        return $this->byBitCode;
-    }
-
-    public function setByBitCode(string $byBitCode): static
-    {
-        $this->byBitCode = $byBitCode;
+        $this->code = $code;
 
         return $this;
     }
     public function __toString(): string
     {
-        return $this->byBitCode;
+        return $this->code;
     }
 
     /**
