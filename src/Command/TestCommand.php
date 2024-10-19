@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Bybit\ErrorCodes;
 use App\Entity\Order;
 use App\Repository\CoinRepository;
 use ByBit\SDK\ByBitApi;
+use ByBit\SDK\Exceptions\HttpException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -26,7 +28,16 @@ class TestCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->sellAllBitCoins();
+        $this->sellAllCoins();
+        return 0;
+        $orderLinkId = '01928bbf-9245-7022-a683-964b0ab30d0a';
+        $result = $this->byBitApi->tradeApi()->getOpenOrders(['orderLinkId' => $orderLinkId, 'category' => 'spot']);
+        if (!$result['list']) {
+            $result = $this->byBitApi->tradeApi()->getOrderHistory(['orderLinkId' => $orderLinkId, 'category' => 'spot']);
+        }
+        $a = 0;
+        return 0;
+        $this->sellAllCoins();
         return self::SUCCESS;
         $orderLinkId = time() . "-11-09-2024";
         $price = $this->getBitCoinCurrentPrice();
@@ -89,19 +100,26 @@ class TestCommand extends Command
     /**
      * Продать все биткоины
      */
-    private function sellAllBitCoins()
+    private function sellAllCoins(): void
     {
         $walletBalance = $this->byBitApi->accountApi()->getWalletBalance(['accountType' => 'UNIFIED']);
-        //        echo print_r($walletBalance, true);
         assert($walletBalance['list'][0]['coin'][0]['coin'] === 'BTC');
-        $result = $this->byBitApi->tradeApi()->placeOrder([
-            'category' => Order\ByBit\Category::spot->value,
-            'symbol' => "BTCUSDT",
-            'side' => Order\ByBit\Side::Sell->value,
-            'orderType' => Order\ByBit\Type::Market->value,
-            'qty' => (string) (floor($walletBalance['list'][0]['coin'][0]['walletBalance'] * 10000) / 10000),
-        ]);
-        //        echo print_r($result, true);
+        foreach ($walletBalance['list'][0]['coin'] as $coin) {
+            try {
+                $this->byBitApi->tradeApi()->placeOrder([
+                                                            'category' => Order\ByBit\Category::spot->value,
+                                                            'symbol' => "{$coin['coin']}USDT",
+                                                            'side' => Order\ByBit\Side::Sell->value,
+                                                            'orderType' => Order\ByBit\Type::Market->value,
+                                                            'qty' => $coin['walletBalance'],
+                                                        ]);
+            } catch (HttpException $e) {
+                if ($e->getCode() !== ErrorCodes::ORDER_QUANTITY_EXCEEDED_LOWER_LIMIT) {
+                    throw $e;
+                }
+            }
+
+        }
         sleep(5);
     }
 }

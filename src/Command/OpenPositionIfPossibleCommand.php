@@ -21,8 +21,7 @@ class OpenPositionIfPossibleCommand extends Command
 {
     public function __construct(
         private readonly TradingStrategyRepositoryInterface $tradingStrategyFactory,
-        private readonly CoinRepository $coinRepository,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly CoinRepository $coinRepository
     ) {
         parent::__construct('app:open-position-if-possible');
     }
@@ -42,10 +41,10 @@ class OpenPositionIfPossibleCommand extends Command
         try {
             $strategy->openPositionIfPossible($coin);
         } catch (HttpException $exception) {
-            if (!in_array($exception->getCode(), [ErrorCodes::NOT_SUPPORTED_SYMBOLS, ErrorCodes::INVALID_SERVER_TIMESTAMP])) {
+            $output->writeln("{$coin->getId()}: {$exception->getMessage()}");
+            if (!in_array($exception->getCode(), [ErrorCodes::NOT_SUPPORTED_SYMBOLS, ErrorCodes::INVALID_SERVER_TIMESTAMP, ErrorCodes::ORDER_VALUE_EXCEEDED_LOWER_LIMIT])) {
                 throw $exception;
             }
-            $output->writeln("{$coin->getId()}: {$exception->getMessage()}");
         }
         return self::SUCCESS;
     }
