@@ -91,7 +91,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 } else {
                     $message .= "Позиция может быть открыта";
                 }
-                $this->logger?->warning($message);
+                $this->logger?->info($message);
             }
         }
         return $result;
