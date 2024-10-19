@@ -48,14 +48,14 @@ readonly class PostUpdateOrderSendToByBitListener
                 'symbol' => $order->getCoin()->getId() . 'USDT',
                 'category' => $order->getCategory()->value,
             ];
-
+            // value это массив где 0 элемент - прошлое значение, а 1 элемент - новое значение
             foreach ($changeSet as $field => $value) {
                 switch ($field) {
-                    case "quantity": $orderArray['qty'] = $value;
+                    case "quantity": $orderArray['qty'] = $value[1];
                         break;
-                    case "price": $orderArray['price'] = $value;
+                    case "price": $orderArray['price'] = $value[1];
                         break;
-                    case "triggerPrice": $orderArray['triggerPrice'] = $value;
+                    case "triggerPrice": $orderArray['triggerPrice'] = $value[1];
                         break;
                 }
             }
