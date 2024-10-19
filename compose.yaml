@@ -38,6 +38,18 @@ services:
       - caddy_config:/config
       - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
     command: /app/bin/console app:trade catch-pump -vv
+  php-handle-positions-command:
+    image: ${IMAGES_PREFIX:-}app-php
+    restart: unless-stopped
+    depends_on:
+      - database
+      - rabbitmq
+    volumes:
+      - ./:/app
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
+    command: /app/bin/console app:positions:handle -vv
   php-message-handler:
     image: ${IMAGES_PREFIX:-}app-php
     restart: unless-stopped

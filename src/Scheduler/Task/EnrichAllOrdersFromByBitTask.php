@@ -25,7 +25,7 @@ readonly class EnrichAllOrdersFromByBitTask
     ) {
     }
 
-    public function __invoke() : void
+    public function __invoke(): void
     {
         $orders = $this->orderRepository->findBy(['byBitStatus' =>  ByBitStatus::New]);
         foreach ($orders as $order) {

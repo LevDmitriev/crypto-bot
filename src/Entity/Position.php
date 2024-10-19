@@ -167,6 +167,14 @@ class Position
         $this->strategyName = $strategyName;
     }
 
+    /**
+     * @return bool
+     */
+    public function isClosed(): bool
+    {
+        return $this->status === Position\Status::Closed;
+    }
+
     public function __toString(): string
     {
         return $this->id;

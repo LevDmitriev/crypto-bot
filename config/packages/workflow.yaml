@@ -7,15 +7,20 @@ framework:
                 property: 'status'
             supports:
                 - App\Entity\Position
-            initial_marking: New
+            initial_marking: Draft
             places:
-                New:
-                    name: Новая
+                Draft:
+                    name: Черновик
+                Opened:
+                    name: Открыта
                 Closed:
                     name: Закрыта
             transitions:
+                open:
+                    from: [ Draft ]
+                    to: Opened
                 close:
-                    from: [New]
+                    from: [Opened, Draft]
                     to: Closed
         order:
             type: 'state_machine'

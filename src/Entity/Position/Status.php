@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Entity\Position;
 
 /**
- * @link https://bybit-exchange.github.io/docs/v5/enum#orderstatus
+ * Статусы позиций
  */
 enum Status: string
 {
-    case New = 'New';
-    case BuyOrderFullFilled = 'BuyOrderFullFilled';
+    case Opened = 'Opened';
+    case Draft = 'Draft';
     case Closed = 'Closed';
 }
