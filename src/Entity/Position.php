@@ -3,7 +3,7 @@
 namespace App\Entity;
 
 use App\Entity\Order\ByBit\Side;
-use App\Entity\Order\Status;
+use App\Entity\Position\Status;
 use App\Repository\PositionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -30,8 +30,8 @@ class Position
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     private ?string $id = null;
 
-    #[ORM\Column(length: 255, nullable: false)]
-    private ?string $status = Status::New->value;
+    #[ORM\Column(length: 255, nullable: false, options: ['default' => Status::Draft->value])]
+    private ?string $status = Status::Draft->value;
 
     #[ORM\Column(length: 255, nullable: false)]
     private string $strategyName;
