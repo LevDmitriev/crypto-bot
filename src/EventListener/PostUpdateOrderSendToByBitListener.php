@@ -79,8 +79,12 @@ readonly class PostUpdateOrderSendToByBitListener
                 return;
             }
             if ($e->getCode() === ErrorCodes::ORDER_PRICE_HAS_TOO_MANY_DECIMALS) {
-                $order['price'] = $order['price'] ? substr($order['price'], 0, -1) : $order['price'];
-                $order['triggerPrice'] = $order['triggerPrice'] ? substr($order['triggerPrice'], 0, -1) : $order['triggerPrice'];
+                if (isset($order['price']) && $order['price']) {
+                    $order['price'] = substr($order['price'], 0, -1);
+                }
+                if (isset($order['triggerPrice']) && $order['triggerPrice']) {
+                    $order['triggerPrice'] = substr($order['triggerPrice'], 0, -1);
+                }
                 $this->amendOrder($order);
                 return;
             }
