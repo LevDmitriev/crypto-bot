@@ -169,6 +169,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $lockKey = self::NAME."-position-price-increased-2percent-{$event->position->getId()}";
             $lock = $this->lockFactory->createLock($lockKey, 7200, false);
             if ($event->changePercent >= 2 && $lock->acquire()) {
+                $this->logger?->info("Увеличиваем стоп на 2% позиции {$event->position->getId()}%}");
                 $orders = $event->position->getOrdersCollection();
                 $buyOrder = $orders->filterBuyOrders()->first();
                 $stopOrder = $orders->filterStopOrders()->first();
@@ -191,6 +192,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $lockKey = self::NAME."-position-price-increased-8percent-{$event->position->getId()}";
         $lock = $this->lockFactory->createLock($lockKey, 7200, false);
         if ($event->changePercent >= 8 && $lock->acquire()) {
+            $this->logger?->info("Продажа 50% позиции {$event->position->getId()}%}");
             $orders = $event->position->getOrdersCollection();
             $buyOrder = $orders->filterBuyOrders()->first();
             $quantityForSale = bcdiv($buyOrder->getRealExecutedQuantity(), '2', 6);
@@ -219,6 +221,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         $lockKey = self::NAME."-position-price-increased-12percent-{$event->position->getId()}";
         $lock = $this->lockFactory->createLock($lockKey, 7200, false);
         if ($event->changePercent >= 12 && $lock->acquire()) {
+            $this->logger?->info("Продажа 25% позиции {$event->position->getId()}%}");
             $orders = $event->position->getOrdersCollection();
             $buyOrder = $orders->filterBuyOrders()->first();
             $quantityForSale = bcdiv($buyOrder->getRealExecutedQuantity(), '4', 6);
@@ -248,6 +251,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
             $lockKey = self::NAME."-position-price-increased-13percent-{$event->position->getId()}";
             $lock = $this->lockFactory->createLock($lockKey, 7200, false);
             if ($event->changePercent >= 13 && $lock->acquire()) {
+                $this->logger?->info("Увеличиваем стоп на 10.2% позиции {$event->position->getId()}%}");
                 $orders = $event->position->getOrdersCollection();
                 $buyOrder = $orders->filterBuyOrders()->first();
                 $stopOrder = $orders->filterStopOrders()->first();

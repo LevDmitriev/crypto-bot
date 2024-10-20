@@ -59,21 +59,7 @@ readonly class PostUpdateOrderSendToByBitListener
                         break;
                 }
             }
-
-            try {
-                $this->amendOrder($orderArray);
-            } catch (HttpException $exception) {
-                /*
-                 * Есть очень специфическая незадокументированная ошибка.
-                 * Если отправить приказ на обновление, но в нём ничего не изменить,
-                 * возвращается ошибка 10001, но у неё совершенно другое сообщение об ошибке:
-                 * The order remains unchanged as the parameters entered match the existing ones.
-                 * Игнорируем такую ошибку
-                 */
-                if ($exception->getCode() !== ErrorCodes::NOT_SUPPORTED_SYMBOLS) {
-                    throw $exception;
-                }
-            }
+            $this->amendOrder($orderArray);
         }
     }
 
@@ -90,6 +76,7 @@ readonly class PostUpdateOrderSendToByBitListener
             if ($e->getCode() === ErrorCodes::ORDER_QUANTITY_HAS_TOO_MANY_DECIMALS) {
                 $order['qty'] = substr($order['qty'], 0, -1);
                 $this->amendOrder($order);
+                return;
             }
             /*
                  * Есть очень специфическая незадокументированная ошибка.
