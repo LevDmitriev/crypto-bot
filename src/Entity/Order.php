@@ -389,9 +389,11 @@ class Order
                 $result[] = "{$this->getRealExecutedQuantity()} {$this->getCoin()->getId()} по {$this->getAveragePrice()} USDT";
                 break;
             case Side::Sell:
-                $result[] = "{$this->getQuantity()} {$this->getCoin()->getId()}";
-                if ($this->getOrderFilter() === OrderFilter::StopOrder) {
-                    $result[] = "по цене {$this->getTriggerPrice()}";
+                $result[] = "{$this->getQuantity()} {$this->getCoin()->getId()} по цене";
+                if ($this->isStop()) {
+                    $result[] = $this->isFilled() ? $this->getAveragePrice() : $this->getTriggerPrice();
+                } else {
+                    $result[] = $this->getAveragePrice();
                 }
                 break;
         }
