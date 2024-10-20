@@ -19,7 +19,9 @@ use App\TradingStrategy\TradingStrategyInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Lock\Lock;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
@@ -167,8 +169,10 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     {
         $this->entityManager->wrapInTransaction(function () use ($event) {
             $lockKey = self::NAME."-position-price-increased-2percent-{$event->position->getId()}";
+            /** @var Lock $lock */
             $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-            if ($event->changePercent >= 2 && !$lock->isAcquired() && $lock->acquire()) {
+            $lock->setLogger(new NullLogger());
+            if ($event->changePercent >= 2 && $lock->acquire()) {
                 $this->logger?->info("Увеличиваем стоп на 2% позиции {$event->position->getId()}%}");
                 $orders = $event->position->getOrdersCollection();
                 $buyOrder = $orders->filterBuyOrders()->first();
@@ -190,8 +194,10 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     {
         $this->entityManager->beginTransaction();
         $lockKey = self::NAME."-position-price-increased-8percent-{$event->position->getId()}";
+        /** @var Lock $lock */
         $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-        if ($event->changePercent >= 8 && !$lock->isAcquired() && $lock->acquire()) {
+        $lock->setLogger(new NullLogger());
+        if ($event->changePercent >= 8 && $lock->acquire()) {
             $this->logger?->info("Продажа 50% позиции {$event->position->getId()}%}");
             $orders = $event->position->getOrdersCollection();
             $buyOrder = $orders->filterBuyOrders()->first();
@@ -219,8 +225,10 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     {
         $this->entityManager->beginTransaction();
         $lockKey = self::NAME."-position-price-increased-12percent-{$event->position->getId()}";
+        /** @var Lock $lock */
         $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-        if ($event->changePercent >= 12 && !$lock->isAcquired() && $lock->acquire()) {
+        $lock->setLogger(new NullLogger());
+        if ($event->changePercent >= 12 && $lock->acquire()) {
             $this->logger?->info("Продажа 25% позиции {$event->position->getId()}%}");
             $orders = $event->position->getOrdersCollection();
             $buyOrder = $orders->filterBuyOrders()->first();
@@ -249,8 +257,10 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     {
         $this->entityManager->wrapInTransaction(function () use ($event) {
             $lockKey = self::NAME."-position-price-increased-13percent-{$event->position->getId()}";
+            /** @var Lock $lock */
             $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-            if ($event->changePercent >= 13 && !$lock->isAcquired() && $lock->acquire()) {
+            $lock->setLogger(new NullLogger());
+            if ($event->changePercent >= 13 && $lock->acquire()) {
                 $this->logger?->info("Увеличиваем стоп на 10.2% позиции {$event->position->getId()}%}");
                 $orders = $event->position->getOrdersCollection();
                 $buyOrder = $orders->filterBuyOrders()->first();
