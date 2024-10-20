@@ -14,9 +14,9 @@ class ErrorCodes
     public const ORDER_QUANTITY_HAS_TOO_MANY_DECIMALS = 170137;
 
     /**
-     * @var int Код ошибки при обновлении приказа, когда количество имеет слишком много знаков после запятой
+     * @var int В цене приказа указано слишком много цифр после запятой
      */
-    public const int ORDER_QUANTITY_HAS_TOO_MANY_DECIMALS_AMEND = 170134;
+    public const int ORDER_PRICE_HAS_TOO_MANY_DECIMALS = 170134;
     /**
      * @var int В приказе указано слишком малое количество
      * @see see https://www.bybit.com/en/announcement-info/spot-trading-rules/

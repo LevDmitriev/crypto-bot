@@ -73,8 +73,14 @@ readonly class PostUpdateOrderSendToByBitListener
              * todo вынести в настройки монеты
              * Пока что постепенно отрезаем числа после запятой
              */
-            if ($e->getCode() === ErrorCodes::ORDER_QUANTITY_HAS_TOO_MANY_DECIMALS || $e->getCode() === ErrorCodes::ORDER_QUANTITY_HAS_TOO_MANY_DECIMALS_AMEND) {
+            if ($e->getCode() === ErrorCodes::ORDER_QUANTITY_HAS_TOO_MANY_DECIMALS) {
                 $order['qty'] = substr($order['qty'], 0, -1);
+                $this->amendOrder($order);
+                return;
+            }
+            if ($e->getCode() === ErrorCodes::ORDER_PRICE_HAS_TOO_MANY_DECIMALS) {
+                $order['price'] = $order['price'] ? substr($order['price'], 0, -1) : $order['price'];
+                $order['triggerPrice'] = $order['triggerPrice'] ? substr($order['triggerPrice'], 0, -1) : $order['triggerPrice'];
                 $this->amendOrder($order);
                 return;
             }
