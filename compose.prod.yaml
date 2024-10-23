@@ -13,6 +13,7 @@ services:
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
       TRUSTED_HOSTS: ${TRUSTED_HOSTS:-^${SERVER_NAME:-example\.com|localhost}|php$$}
     volumes:
+      - ./:/app
       - caddy_data:/data
       - caddy_config:/config
       - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
