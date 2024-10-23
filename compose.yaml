@@ -37,7 +37,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
-    command: /app/bin/console app:trade catch-pump -vv
+#    command: /app/bin/console app:trade catch-pump -vv
   php-handle-positions-command:
     image: ${IMAGES_PREFIX:-}app-php
     restart: unless-stopped
@@ -49,7 +49,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
-    command: /app/bin/console app:positions:handle -vv
+#    command: /app/bin/console app:positions:handle -vv
   php-message-handler:
     image: ${IMAGES_PREFIX:-}app-php
     restart: unless-stopped
@@ -61,7 +61,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
-    command: /app/bin/console messenger:consume async scheduler_default -vv --time-limit=900
+#    command: /app/bin/console messenger:consume async scheduler_default -vv --time-limit=900
 # Mercure is installed as a Caddy module, prevent the Flex recipe from installing another service
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###

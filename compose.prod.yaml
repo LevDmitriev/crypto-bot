@@ -1,9 +1,112 @@
 # Production environment override
 services:
   php:
-    build:
-      context: .
-      target: frankenphp_prod
+    image: ${IMAGES_PREFIX:-}app-php
+    restart: unless-stopped
+    depends_on:
+      - database
+      - rabbitmq
     environment:
-      APP_SECRET: ${APP_SECRET}
       SERVER_NAME: ":80"
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-^${SERVER_NAME:-example\.com|localhost}|php$$}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
+    ports:
+      # HTTP
+      - target: 80
+        published: ${HTTP_PORT:-80}
+        protocol: tcp
+      # HTTPS
+      - target: 443
+        published: ${HTTPS_PORT:-443}
+        protocol: tcp
+      # HTTP/3
+      - target: 443
+        published: ${HTTP3_PORT:-443}
+        protocol: udp
+  php-trade-command:
+    image: ${IMAGES_PREFIX:-}app-php
+    restart: unless-stopped
+    depends_on:
+      - database
+      - rabbitmq
+    volumes:
+      - ./:/app
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
+    command: /app/bin/console app:trade catch-pump -vv
+  php-handle-positions-command:
+    image: ${IMAGES_PREFIX:-}app-php
+    restart: unless-stopped
+    depends_on:
+      - database
+      - rabbitmq
+    volumes:
+      - ./:/app
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
+    command: /app/bin/console app:positions:handle -vv
+  php-message-handler:
+    image: ${IMAGES_PREFIX:-}app-php
+    restart: unless-stopped
+    depends_on:
+      - database
+      - rabbitmq
+    volumes:
+      - ./:/app
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
+    command: /app/bin/console messenger:consume async scheduler_default -vv
+  # Mercure is installed as a Caddy module, prevent the Flex recipe from installing another service
+  ###> symfony/mercure-bundle ###
+  ###< symfony/mercure-bundle ###
+  
+  ###> doctrine/doctrine-bundle ###
+  database:
+    image: postgres:${POSTGRES_VERSION:-16}-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      # You should definitely change the password in production
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}"]
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - database_data:/var/lib/postgresql/data:rw
+      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
+      # - ./docker/db/data:/var/lib/postgresql/data:rw
+  ###< doctrine/doctrine-bundle ###
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "supersecurecookie1234567890"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+    volumes:
+      - "rabbitmq-data:/data"
+volumes:
+  caddy_data:
+  caddy_config:
+  rabbitmq-data:
+  ###> symfony/mercure-bundle ###
+  ###< symfony/mercure-bundle ###
+  
+  ###> doctrine/doctrine-bundle ###
+  database_data:
+###< doctrine/doctrine-bundle ###
+
