@@ -29,7 +29,9 @@ services:
         published: ${HTTP3_PORT:-443}
         protocol: udp
   php-trade-command:
-    image: ${IMAGES_PREFIX:-}app-php
+    build:
+      context: .
+      target: frankenphp_dev
     restart: unless-stopped
     depends_on:
       - database
@@ -41,7 +43,9 @@ services:
       - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
 #    command: /app/bin/console app:trade catch-pump -vv
   php-handle-positions-command:
-    image: ${IMAGES_PREFIX:-}app-php
+    build:
+      context: .
+      target: frankenphp_dev
     restart: unless-stopped
     depends_on:
       - database
@@ -53,7 +57,9 @@ services:
       - ./frankenphp/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini:ro
 #    command: /app/bin/console app:positions:handle -vv
   php-message-handler:
-    image: ${IMAGES_PREFIX:-}app-php
+    build:
+      context: .
+      target: frankenphp_dev
     restart: unless-stopped
     depends_on:
       - database
