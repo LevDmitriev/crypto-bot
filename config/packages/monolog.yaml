@@ -5,11 +5,11 @@ monolog:
 when@dev:
     monolog:
         handlers:
-            main:
-                type: stream
-                path: "%kernel.logs_dir%/%kernel.environment%.log"
-                level: debug
-                channels: ["!event"]
+#            main:
+#                type: stream
+#                path: "%kernel.logs_dir%/%kernel.environment%.log"
+#                level: debug
+#                channels: ["!event"]
             deprecation:
                 bubble: false
                 type: "null"
