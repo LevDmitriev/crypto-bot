@@ -9,6 +9,7 @@ services:
       - database
       - rabbitmq
     environment:
+      APP_ENV: dev
       SERVER_NAME: ":80"
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
       TRUSTED_HOSTS: ${TRUSTED_HOSTS:-^${SERVER_NAME:-example\.com|localhost}|php$$}
@@ -92,9 +93,9 @@ services:
       retries: 5
       start_period: 60s
     volumes:
-      - database_data:/var/lib/postgresql/data:rw
+#      - database_data:/var/lib/postgresql/data:rw
       # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
+       - ./docker/db/data:/var/lib/postgresql/data:rw
   ###< doctrine/doctrine-bundle ###
   rabbitmq:
     image: rabbitmq:3-management
@@ -114,8 +115,3 @@ volumes:
   rabbitmq-data:
   ###> symfony/mercure-bundle ###
   ###< symfony/mercure-bundle ###
-  
-  ###> doctrine/doctrine-bundle ###
-  database_data:
-###< doctrine/doctrine-bundle ###
-
