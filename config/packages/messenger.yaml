@@ -6,6 +6,7 @@ framework:
         buses:
             command.bus:
                 middleware:
+                    - doctrine_ping_connection
                     - doctrine_transaction
         transports:
              sync:

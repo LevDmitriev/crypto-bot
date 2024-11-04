@@ -14,7 +14,7 @@ use Symfony\Component\Scheduler\Attribute\AsCronTask;
 /**
  * Команда по закрытию всех позиций
  */
-#[AsCronTask('50 18 * * *', 'Europe/Moscow', transports: 'async')]
+#[AsCronTask(expression: '50 18 * * *', timezone: 'Europe/Moscow')]
 readonly class CloseAllPositionsTask
 {
     public function __construct(
