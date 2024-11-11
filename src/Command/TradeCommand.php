@@ -12,8 +12,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Process\PhpSubprocess;
+use Symfony\Component\Process\Process;
 
 /**
  * Команда торговли с помощью торговой стратегии
@@ -40,14 +39,14 @@ class TradeCommand extends Command
             $coins = $this->coinRepository->createQueryBuilder('c')->getQuery()->toIterable();
             /** @var Coin $coin */
             foreach ($coins as $coin) {
-                $subProcess = new PhpSubprocess(["bin/console", "app:open-position-if-possible", $input->getArgument('strategy'), $coin->getId()], timeout: 600);
+                $subProcess = new Process(["bin/console", "app:open-position-if-possible", $input->getArgument('strategy'), $coin->getId()], timeout: 0);
                 $subProcess->start(function (string $type, string $buffer) use ($output): void {
                     $output->writeln($buffer);
                 });
                 $runningProcesses->add($subProcess);
                 $this->entityManager->detach($coin);
                 do {
-                    $runningProcesses = $runningProcesses->filter(fn (PhpSubprocess $process) => $process->isRunning());
+                    $runningProcesses = $runningProcesses->filter(fn (Process $process) => $process->isRunning());
                 } while ($runningProcesses->count() >= 10);
             }
             $this->entityManager->clear();

@@ -15,7 +15,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Process\PhpSubprocess;
 use Symfony\Component\Process\Process;
 
 /**
@@ -33,7 +32,7 @@ class HandlePositionsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $symfonyStyle = new SymfonyStyle($input, $output);
-        /** @var ArrayCollection<string, PhpSubprocess> $runningProcesses Map ID позиции и её процесс */
+        /** @var ArrayCollection<string, Process> $runningProcesses Map ID позиции и её процесс */
         $runningProcesses = new ArrayCollection();
         while (true) {
             // Ищем все открытые позиции, которые ещё не обрабатываем
@@ -45,7 +44,7 @@ class HandlePositionsCommand extends Command
             $positions = $this->positionRepository->matching($criteria);
             foreach ($positions as $position) {
                 $symfonyStyle->writeln( (new \DateTime())->format('Y-m-d\TH:i:sO') . " Запуск обработки позиции {$position->getId()} ");
-                $subProcess = new PhpSubprocess(["bin/console", "app:position:handle", $position->getId()], timeout: 600);
+                $subProcess = new Process(["bin/console", "app:position:handle", $position->getId()], timeout: 0);
                 $subProcess->start(function (string $type, string $buffer) use ($symfonyStyle): void {
                     if (Process::ERR === $type) {
                         $symfonyStyle->error($buffer);
@@ -55,7 +54,7 @@ class HandlePositionsCommand extends Command
                 });
                 $runningProcesses->set($position->getId(), $subProcess);
             }
-            $runningProcesses = $runningProcesses->filter(fn (PhpSubprocess $process) => $process->isRunning());
+            $runningProcesses = $runningProcesses->filter(fn (Process $process) => $process->isRunning());
             $this->entityManager->clear();
             sleep(5); // хотя бы 5 секунд подождём чтобы не долбить постоянно БД
         }
