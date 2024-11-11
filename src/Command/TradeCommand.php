@@ -35,15 +35,14 @@ class TradeCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $symfonyStyle = new SymfonyStyle($input, $output);
         $runningProcesses = new ArrayCollection();
         while (true) {
             $coins = $this->coinRepository->createQueryBuilder('c')->getQuery()->toIterable();
             /** @var Coin $coin */
             foreach ($coins as $coin) {
-                $subProcess = new PhpSubprocess(["bin/console", "app:open-position-if-possible", $input->getArgument('strategy'), $coin->getId()], timeout: 0);
-                $subProcess->start(function (string $type, string $buffer) use ($symfonyStyle): void {
-                        $symfonyStyle->write($buffer);
+                $subProcess = new PhpSubprocess(["bin/console", "app:open-position-if-possible", $input->getArgument('strategy'), $coin->getId()], timeout: 600);
+                $subProcess->start(function (string $type, string $buffer) use ($output): void {
+                    $output->writeln($buffer);
                 });
                 $runningProcesses->add($subProcess);
                 $this->entityManager->detach($coin);
