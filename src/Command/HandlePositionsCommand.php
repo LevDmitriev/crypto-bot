@@ -45,7 +45,7 @@ class HandlePositionsCommand extends Command
             $positions = $this->positionRepository->matching($criteria);
             foreach ($positions as $position) {
                 $symfonyStyle->writeln("Запуск обработки позиции {$position->getId()}");
-                $subProcess = new PhpSubprocess(["bin/console", "app:position:handle", $position->getId()], timeout: 0);
+                $subProcess = new PhpSubprocess(["bin/console", "app:position:handle", $position->getId()], timeout: 600);
                 $subProcess->start(function (string $type, string $buffer) use ($symfonyStyle): void {
                     if (Process::ERR === $type) {
                         $symfonyStyle->error($buffer);
