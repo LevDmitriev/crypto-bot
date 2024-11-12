@@ -47,7 +47,7 @@ class TradeCommand extends Command
                 $this->entityManager->detach($coin);
                 do {
                     $runningProcesses = $runningProcesses->filter(fn (Process $process) => $process->isRunning());
-                } while ($runningProcesses->count() >= 10);
+                } while (sleep(1) === 0 && $runningProcesses->count() >= 10);
             }
             $this->entityManager->clear();
             gc_collect_cycles();
