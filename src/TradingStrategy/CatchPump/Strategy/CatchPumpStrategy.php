@@ -300,8 +300,12 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                         $this->dispatcher->dispatch(new LastTwoHoursPriceChangedEvent($position, $priceChangePercent), LastTwoHoursPriceChangedEvent::NAME);
                     }
                 })
-                ->onTick(fn (Client $client) => $is2HoursExpired() && $client->stop())
-                ->onTick(fn (Client $client) => $position->isClosed() && $client->stop())
+                ->onTick(function (Client $client) use ($position, $is2HoursExpired) {
+                    if ($position->isClosed() || $is2HoursExpired()) {
+                        $client->stop();
+                        $client->disconnect();
+                    }
+                })
                 ->start();
         }
     }
