@@ -167,7 +167,7 @@ class Position
      */
     public function isClosed(): bool
     {
-        return $this->status === Position\Status::Closed;
+        return $this->status === Position\Status::Closed->value;
     }
 
     public function __toString(): string
