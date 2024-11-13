@@ -293,11 +293,11 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                 ->setPersistent(true)
                 ->onText(function (Client $client, Connection $connection, Message $message) use ($position) {
                     $json = json_decode($message->getContent(), true);
-                    $this->entityManager->refresh($position);
                     if ($lastTradedPrice = $json['data'][0]['close'] ?? null) {
                         $averagePrice = $position->getAveragePrice();
                         $priceChangePercent = (float) bcmul(bcsub(bcdiv($lastTradedPrice, $averagePrice, 6), '1', 6), '100', 2);
                         $this->dispatcher->dispatch(new LastTwoHoursPriceChangedEvent($position, $priceChangePercent), LastTwoHoursPriceChangedEvent::NAME);
+                        $this->entityManager->refresh($position);
                     }
                 })
                 ->onTick(function (Client $client) use ($position, $is2HoursExpired) {

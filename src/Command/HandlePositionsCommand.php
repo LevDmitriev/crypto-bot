@@ -55,8 +55,9 @@ class HandlePositionsCommand extends Command
                 $runningProcesses->set($position->getId(), $subProcess);
             }
             sleep(5); // хотя бы 5 секунд подождём чтобы не долбить постоянно БД
-            $this->entityManager->clear();
             $runningProcesses = $runningProcesses->filter(fn (Process $process) => $process->isRunning());
+            $this->entityManager->clear();
+            gc_collect_cycles();
         }
 
         return self::SUCCESS;
