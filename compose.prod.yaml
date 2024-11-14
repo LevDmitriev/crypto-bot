@@ -109,10 +109,7 @@ services:
       - "15672:15672"
     restart: unless-stopped
     volumes:
-      - "rabbitmq-data:/data"
+      - ./docker/rabbitmq/data:/data
 volumes:
   caddy_data:
   caddy_config:
-  rabbitmq-data:
-  ###> symfony/mercure-bundle ###
-  ###< symfony/mercure-bundle ###
