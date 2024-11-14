@@ -14,7 +14,7 @@ use App\Market\Model\CandleInterface;
 use App\Market\Repository\CandleRepositoryInterface;
 use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
-use App\TradingStrategy\CatchPump\Event\LastTwoHoursPriceChangedEvent;
+use App\TradingStrategy\CatchPump\Event\PriceChangedEvent;
 use App\TradingStrategy\TradingStrategyInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -148,7 +148,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     public static function getSubscribedEvents(): array
     {
         return [
-            LastTwoHoursPriceChangedEvent::NAME => [
+            PriceChangedEvent::NAME => [
                 ['moveStopPlusPoint2', 0],
                 ['sell50Percent', 0],
                 ['sell25Percent', 0],
@@ -159,11 +159,12 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
 
     /**
      * Увеличить триггерную цену стопа на 0,2% от изначальной
-     * @param LastTwoHoursPriceChangedEvent $event
+     *
+     * @param PriceChangedEvent $event
      *
      * @return void
      */
-    public function moveStopPlusPoint2(LastTwoHoursPriceChangedEvent $event): void
+    public function moveStopPlusPoint2(PriceChangedEvent $event): void
     {
         $this->entityManager->wrapInTransaction(function () use ($event) {
             $lockKey = self::NAME."-position-price-increased-2percent-{$event->position->getId()}";
@@ -184,11 +185,12 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
 
     /**
      * Выставить приказ на продажу 50% позиции
-     * @param LastTwoHoursPriceChangedEvent $event
+     *
+     * @param PriceChangedEvent $event
      *
      * @return void
      */
-    public function sell50Percent(LastTwoHoursPriceChangedEvent $event): void
+    public function sell50Percent(PriceChangedEvent $event): void
     {
         $this->entityManager->beginTransaction();
         $lockKey = self::NAME."-position-price-increased-8percent-{$event->position->getId()}";
@@ -215,11 +217,12 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     }
     /**
      * Выставить приказ на продажу 25% позиции
-     * @param LastTwoHoursPriceChangedEvent $event
+     *
+     * @param PriceChangedEvent $event
      *
      * @return void
      */
-    public function sell25Percent(LastTwoHoursPriceChangedEvent $event): void
+    public function sell25Percent(PriceChangedEvent $event): void
     {
         $this->entityManager->beginTransaction();
         $lockKey = self::NAME."-position-price-increased-12percent-{$event->position->getId()}";
@@ -247,11 +250,12 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
 
     /**
      * Увеличить триггерную цену стопа на 10,2% от изначальной
-     * @param LastTwoHoursPriceChangedEvent $event
+     *
+     * @param PriceChangedEvent $event
      *
      * @return void
      */
-    public function moveStopPlus10point2(LastTwoHoursPriceChangedEvent $event): void
+    public function moveStopPlus10point2(PriceChangedEvent $event): void
     {
         $this->entityManager->wrapInTransaction(function () use ($event) {
             $lockKey = self::NAME."-position-price-increased-13percent-{$event->position->getId()}";
@@ -296,8 +300,8 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                         2
                     );
                     $this->dispatcher->dispatch(
-                        new LastTwoHoursPriceChangedEvent($position, $priceChangePercent),
-                        LastTwoHoursPriceChangedEvent::NAME
+                        new PriceChangedEvent($position, $priceChangePercent),
+                        PriceChangedEvent::NAME
                     );
                     $this->entityManager->refresh($position);
                 }

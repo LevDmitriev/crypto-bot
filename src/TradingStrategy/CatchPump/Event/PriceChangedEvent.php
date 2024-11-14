@@ -6,11 +6,11 @@ use App\Entity\Position;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**
- * Цена за 2 часа с момента открытия цена изменилась
+ * Событие изменение цены
  */
-class LastTwoHoursPriceChangedEvent extends Event
+class PriceChangedEvent extends Event
 {
-    public const NAME = 'trading_strategy.catch_pump.last_2_hours_price_changed';
+    public const NAME = 'trading_strategy.catch_pump.price_changed';
 
     public function __construct(public readonly Position $position, public readonly float $changePercent)
     {

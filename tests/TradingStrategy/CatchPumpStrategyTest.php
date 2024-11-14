@@ -13,7 +13,7 @@ use App\Market\Repository\CandleRepositoryInterface;
 use App\Repository\AccountRepository;
 use App\Repository\CoinRepository;
 use App\Repository\PositionRepository;
-use App\TradingStrategy\CatchPump\Event\LastTwoHoursPriceChangedEvent;
+use App\TradingStrategy\CatchPump\Event\PriceChangedEvent;
 use App\TradingStrategy\CatchPump\Strategy\CatchPumpStrategy;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -83,7 +83,6 @@ class CatchPumpStrategyTest extends KernelTestCase
         ));
         $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
-            coin:               $coin,
             entityManager:      $entityManager,
             candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
@@ -151,7 +150,6 @@ class CatchPumpStrategyTest extends KernelTestCase
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
-            coin:               $coin,
             entityManager:      $entityManager,
             candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
@@ -219,7 +217,6 @@ class CatchPumpStrategyTest extends KernelTestCase
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
-            coin:               $coin,
             entityManager:      $entityManager,
             candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
@@ -288,7 +285,6 @@ class CatchPumpStrategyTest extends KernelTestCase
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
-            coin:               $coin,
             entityManager:      $entityManager,
             candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
@@ -356,7 +352,6 @@ class CatchPumpStrategyTest extends KernelTestCase
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
-            coin:               $coin,
             entityManager:      $entityManager,
             candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
@@ -401,7 +396,6 @@ class CatchPumpStrategyTest extends KernelTestCase
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
-            coin:               $coin,
             entityManager:      $entityManager,
             candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
@@ -450,7 +444,6 @@ class CatchPumpStrategyTest extends KernelTestCase
         $position->addOrder($stopOrder);
         $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
-            coin:               $coin,
             entityManager:      $entityManager,
             candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
@@ -461,7 +454,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             positionStateMachine: $this->createMock(WorkflowInterface::class),
             lockFactory: $lockFactory
         );
-        $strategy->sell50Percent(new LastTwoHoursPriceChangedEvent($position, 8));
+        $strategy->sell50Percent(new PriceChangedEvent($position, 8));
         $order = $position->getOrdersCollection()->last();
         self::assertEquals('1.0000', $order->getQuantity());
         self::assertEquals('102.0000', $stopOrder->getTriggerPrice());
@@ -501,7 +494,6 @@ class CatchPumpStrategyTest extends KernelTestCase
         $position->addOrder($stopOrder);
         $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
-            coin:               $coin,
             entityManager:      $entityManager,
             candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
@@ -512,7 +504,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             positionStateMachine: $this->createMock(WorkflowInterface::class),
             lockFactory: $lockFactory
         );
-        $strategy->sell25Percent(new LastTwoHoursPriceChangedEvent($position, 12));
+        $strategy->sell25Percent(new PriceChangedEvent($position, 12));
         $order = $position->getOrdersCollection()->last();
         self::assertEquals('1.0000', $order->getQuantity());
         self::assertEquals('1082.0000', $stopOrder->getTriggerPrice());
@@ -549,7 +541,6 @@ class CatchPumpStrategyTest extends KernelTestCase
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $lockFactory = new LockFactory(new InMemoryStore());
         $strategy = new CatchPumpStrategy(
-            coin:               $coin,
             entityManager:      $entityManager,
             candleRepository:   $candleRepository,
             positionRepository: $positionRepository,
@@ -560,7 +551,7 @@ class CatchPumpStrategyTest extends KernelTestCase
             positionStateMachine: $this->createMock(WorkflowInterface::class),
             lockFactory: $lockFactory
         );
-        $position = $strategy->openPosition();
+        $position = $strategy->openPosition($coin);
         $buyOrder = $position->getOrdersCollection()->first();
         self::assertEquals('51.000112', $buyOrder->getQuantity());
         self::assertEquals(Type::Market, $buyOrder->getType());
