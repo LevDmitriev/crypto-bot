@@ -58,9 +58,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     public function canOpenPosition(Coin $coin): bool
     {
         $result = false;
-        /** @var bool $isTimeCorrect Можно ли в это время открывать позиции. Позиции не должны открываться с 18:50 до 7:00 МСК */
-        $isTimeCorrect = time() < strtotime('today 18:50') && time() > strtotime('today 7:00');
-        if ($isTimeCorrect && !$this->positionRepository->findOneNotClosedByCoin($coin) && $this->positionRepository->getTotalNotClosedCount() < 5) {
+        if (!$this->positionRepository->findOneNotClosedByCoin($coin) && $this->positionRepository->getTotalNotClosedCount() < 5) {
             /** @var CandleCollection $candles7hours 7 часовая свечка */
             $candles7hours = $this->candleRepository->find(symbol: $coin->getId() . 'USDT', interval: '15', limit: 28);
             /** @var CandleCollection $candles7hoursExceptLast15Minutes 7 часовая свечка не включая последние 15 минут */
@@ -283,30 +281,33 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
 
     public function handlePosition(Position $position): void
     {
-        /** @var callable $is2HoursExpired Истекло 2 часа от входа в позицию?  */
-        $is2HoursExpired = fn () => (time() - $position->getCreatedAt()->getTimestamp()) > 7200;
-        if (!$is2HoursExpired()) {
-            $topic = "kline.1.{$position->getCoin()->getId()}USDT";
-            $client = new Client("wss://stream.bybit.com/v5/public/spot");
-            $client->send(new Text(json_encode(["op" => "subscribe", 'args' => [$topic]])));
-            $client
-                ->setPersistent(true)
-                ->onText(function (Client $client, Connection $connection, Message $message) use ($position) {
-                    $json = json_decode($message->getContent(), true);
-                    if ($lastTradedPrice = $json['data'][0]['close'] ?? null) {
-                        $averagePrice = $position->getAveragePrice();
-                        $priceChangePercent = (float) bcmul(bcsub(bcdiv($lastTradedPrice, $averagePrice, 6), '1', 6), '100', 2);
-                        $this->dispatcher->dispatch(new LastTwoHoursPriceChangedEvent($position, $priceChangePercent), LastTwoHoursPriceChangedEvent::NAME);
-                        $this->entityManager->refresh($position);
-                    }
-                })
-                ->onTick(function (Client $client) use ($position, $is2HoursExpired) {
-                    if ($position->isClosed() || $is2HoursExpired()) {
-                        $client->stop();
-                        $client->disconnect();
-                    }
-                })
-                ->start();
-        }
+        $topic = "kline.1.{$position->getCoin()->getId()}USDT";
+        $client = new Client("wss://stream.bybit.com/v5/public/spot");
+        $client->send(new Text(json_encode(["op" => "subscribe", 'args' => [$topic]])));
+        $client
+            ->setPersistent(true)
+            ->onText(function (Client $client, Connection $connection, Message $message) use ($position) {
+                $json = json_decode($message->getContent(), true);
+                if ($lastTradedPrice = $json['data'][0]['close'] ?? null) {
+                    $averagePrice = $position->getAveragePrice();
+                    $priceChangePercent = (float)bcmul(
+                        bcsub(bcdiv($lastTradedPrice, $averagePrice, 6), '1', 6),
+                        '100',
+                        2
+                    );
+                    $this->dispatcher->dispatch(
+                        new LastTwoHoursPriceChangedEvent($position, $priceChangePercent),
+                        LastTwoHoursPriceChangedEvent::NAME
+                    );
+                    $this->entityManager->refresh($position);
+                }
+            })
+            ->onTick(function (Client $client) use ($position) {
+                if ($position->isClosed()) {
+                    $client->stop();
+                    $client->disconnect();
+                }
+            })
+            ->start();
     }
 }
