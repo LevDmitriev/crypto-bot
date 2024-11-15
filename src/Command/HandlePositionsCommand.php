@@ -31,7 +31,6 @@ class HandlePositionsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $symfonyStyle = new SymfonyStyle($input, $output);
         /** @var ArrayCollection<string, Process> $runningProcesses Map ID позиции и её процесс */
         $runningProcesses = new ArrayCollection();
         while (true) {
@@ -43,14 +42,10 @@ class HandlePositionsCommand extends Command
             /** @var Collection<int, Position> $positions */
             $positions = $this->positionRepository->matching($criteria);
             foreach ($positions as $position) {
-                $symfonyStyle->writeln( (new \DateTime())->format('Y-m-d\TH:i:sO') . " Запуск обработки позиции {$position->getId()} ");
+                $output->writeln( (new \DateTime())->format('Y-m-d\TH:i:sO') . " Запуск обработки позиции {$position->getId()} ");
                 $subProcess = new Process(["bin/console", "app:position:handle", $position->getId()], timeout: 0);
-                $subProcess->start(function (string $type, string $buffer) use ($symfonyStyle): void {
-                    if (Process::ERR === $type) {
-                        $symfonyStyle->error($buffer);
-                    } else {
-                        $symfonyStyle->write($buffer);
-                    }
+                $subProcess->start(function (string $type, string $buffer) use ($output): void {
+                        $output->writeln($buffer);
                 });
                 $runningProcesses->set($position->getId(), $subProcess);
             }
