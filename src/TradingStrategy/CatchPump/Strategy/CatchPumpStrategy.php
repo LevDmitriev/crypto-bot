@@ -14,15 +14,10 @@ use App\Market\Model\CandleInterface;
 use App\Market\Repository\CandleRepositoryInterface;
 use App\Repository\AccountRepository;
 use App\Repository\PositionRepository;
-use App\TradingStrategy\CatchPump\Event\PriceChangedEvent;
 use App\TradingStrategy\TradingStrategyInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
-use Psr\Log\NullLogger;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\Lock\Lock;
-use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -35,7 +30,7 @@ use WebSocket\Message\Text;
  * Стратегия, которая пытается поймать момент, когда происходит
  * разгон цены монеты (pump) и пытается купить на низах и продать на верхах.
  */
-class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInterface, LoggerAwareInterface
+class CatchPumpStrategy implements TradingStrategyInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
     public const NAME = 'catch-pump';
@@ -48,7 +43,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
         private readonly OrderFactory $orderFactory,
         private readonly MessageBusInterface $commandBus,
         private readonly WorkflowInterface $positionStateMachine,
-        private readonly LockFactory $lockFactory
+        private readonly WorkflowInterface $catchPumpPositionStateMachine
     ) {
     }
 
@@ -145,135 +140,6 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
     }
 
 
-    public static function getSubscribedEvents(): array
-    {
-        return [
-            PriceChangedEvent::NAME => [
-                ['moveStopPlusPoint2', 0],
-                ['sell50Percent', 0],
-                ['sell25Percent', 0],
-                ['moveStopPlus10point2', 0],
-            ],
-        ];
-    }
-
-    /**
-     * Увеличить триггерную цену стопа на 0,2% от изначальной
-     *
-     * @param PriceChangedEvent $event
-     *
-     * @return void
-     */
-    public function moveStopPlusPoint2(PriceChangedEvent $event): void
-    {
-        $this->entityManager->wrapInTransaction(function () use ($event) {
-            $lockKey = self::NAME."-position-price-increased-2percent-{$event->position->getId()}";
-            /** @var Lock $lock */
-            $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-            $lock->setLogger(new NullLogger());
-            if ($event->changePercent >= 2 && $lock->acquire()) {
-                $this->logger?->info("Увеличиваем стоп на 2% позиции {$event->position->getId()}}");
-                $orders = $event->position->getOrdersCollection();
-                $buyOrder = $orders->filterBuyOrders()->first();
-                $stopOrder = $orders->filterStopOrders()->first();
-                $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.002', 6);
-                $stopOrder->setTriggerPrice($triggerPrice);
-                $this->entityManager->persist($stopOrder);
-            }
-        });
-    }
-
-    /**
-     * Выставить приказ на продажу 50% позиции
-     *
-     * @param PriceChangedEvent $event
-     *
-     * @return void
-     */
-    public function sell50Percent(PriceChangedEvent $event): void
-    {
-        $this->entityManager->beginTransaction();
-        $lockKey = self::NAME."-position-price-increased-8percent-{$event->position->getId()}";
-        /** @var Lock $lock */
-        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-        $lock->setLogger(new NullLogger());
-        if ($event->changePercent >= 8 && $lock->acquire()) {
-            $this->logger?->info("Продажа 50% позиции {$event->position->getId()}}");
-            $orders = $event->position->getOrdersCollection();
-            $buyOrder = $orders->filterBuyOrders()->first();
-            $quantityForSale = bcdiv($buyOrder->getRealExecutedQuantity(), '2', 6);
-            $stopOrder = $orders->filterStopOrders()->first();
-            $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.02', 6));
-            $stopOrder->setQuantity(bcsub($stopOrder->getQuantity(), $quantityForSale, 6));
-            // Сначала обновляем стоп-приказ, а потом добавляем новый. Порядок важен.
-            $this->entityManager->persist($stopOrder);
-            $this->entityManager->flush();
-            $order = $this->orderFactory->create(coin: $event->position->getCoin(), quantity: $quantityForSale, side: Side::Sell);
-            $order->setPosition($event->position);
-            $this->entityManager->persist($order);
-            $this->entityManager->flush();
-        }
-        $this->entityManager->commit();
-    }
-    /**
-     * Выставить приказ на продажу 25% позиции
-     *
-     * @param PriceChangedEvent $event
-     *
-     * @return void
-     */
-    public function sell25Percent(PriceChangedEvent $event): void
-    {
-        $this->entityManager->beginTransaction();
-        $lockKey = self::NAME."-position-price-increased-12percent-{$event->position->getId()}";
-        /** @var Lock $lock */
-        $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-        $lock->setLogger(new NullLogger());
-        if ($event->changePercent >= 12 && $lock->acquire()) {
-            $this->logger?->info("Продажа 25% позиции {$event->position->getId()}}");
-            $orders = $event->position->getOrdersCollection();
-            $buyOrder = $orders->filterBuyOrders()->first();
-            $quantityForSale = bcdiv($buyOrder->getRealExecutedQuantity(), '4', 6);
-            $stopOrder = $orders->filterStopOrders()->first();
-            $stopOrder->setTriggerPrice(bcmul($buyOrder->getAveragePrice(), '1.082', 6));
-            $stopOrder->setQuantity(bcsub($stopOrder->getQuantity(), $quantityForSale, 6));
-            // Сначала обновляем стоп-приказ, а потом добавляем новый. Порядок важен.
-            $this->entityManager->persist($stopOrder);
-            $this->entityManager->flush();
-            $order = $this->orderFactory->create(coin: $event->position->getCoin(), quantity: $quantityForSale, side: Side::Sell);
-            $order->setPosition($event->position);
-            $this->entityManager->persist($order);
-            $this->entityManager->flush();
-        }
-        $this->entityManager->commit();
-    }
-
-    /**
-     * Увеличить триггерную цену стопа на 10,2% от изначальной
-     *
-     * @param PriceChangedEvent $event
-     *
-     * @return void
-     */
-    public function moveStopPlus10point2(PriceChangedEvent $event): void
-    {
-        $this->entityManager->wrapInTransaction(function () use ($event) {
-            $lockKey = self::NAME."-position-price-increased-13percent-{$event->position->getId()}";
-            /** @var Lock $lock */
-            $lock = $this->lockFactory->createLock($lockKey, 7200, false);
-            $lock->setLogger(new NullLogger());
-            if ($event->changePercent >= 13 && $lock->acquire()) {
-                $this->logger?->info("Увеличиваем стоп на 10.2% позиции {$event->position->getId()}}");
-                $orders = $event->position->getOrdersCollection();
-                $buyOrder = $orders->filterBuyOrders()->first();
-                $stopOrder = $orders->filterStopOrders()->first();
-                $triggerPrice = bcmul($buyOrder->getAveragePrice(), '1.102', 6);
-                $stopOrder->setTriggerPrice($triggerPrice);
-                $this->entityManager->persist($stopOrder);
-            }
-        });
-    }
-
     public function openPositionIfPossible(Coin $coin): ?Position
     {
         if ($this->canOpenPosition($coin)) {
@@ -299,10 +165,23 @@ class CatchPumpStrategy implements TradingStrategyInterface, EventSubscriberInte
                         '100',
                         2
                     );
-                    $this->dispatcher->dispatch(
-                        new PriceChangedEvent($position, $priceChangePercent),
-                        PriceChangedEvent::NAME
-                    );
+                    $previousPosition = $position->getStatusInStrategy();
+                    if ($priceChangePercent >= 2 && $this->catchPumpPositionStateMachine->can($position, 'increase_2')) {
+                        $this->catchPumpPositionStateMachine->apply($position, 'increase_2');
+                    }
+                    if ($priceChangePercent >= 8 && $this->catchPumpPositionStateMachine->can($position, 'increase_8')) {
+                        $this->catchPumpPositionStateMachine->apply($position, 'increase_8');
+                    }
+                    if ($priceChangePercent >= 12 && $this->catchPumpPositionStateMachine->can($position, 'increase_12')) {
+                        $this->catchPumpPositionStateMachine->apply($position, 'increase_12');
+                    }
+                    if ($priceChangePercent >= 13 && $this->catchPumpPositionStateMachine->can($position, 'increase_13')) {
+                        $this->catchPumpPositionStateMachine->apply($position, 'increase_13');
+                    }
+                    if ($previousPosition !== $position->getStatusInStrategy()) {
+                        $this->entityManager->persist($position);
+                        $this->entityManager->flush();
+                    }
                     $this->entityManager->refresh($position);
                 }
             })

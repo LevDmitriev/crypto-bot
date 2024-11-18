@@ -45,7 +45,7 @@ class HandlePositionsCommand extends Command
                 $output->writeln( (new \DateTime())->format('Y-m-d\TH:i:sO') . " Запуск обработки позиции {$position->getId()} ");
                 $subProcess = new Process(["bin/console", "app:position:handle", $position->getId()], timeout: 0);
                 $subProcess->start(function (string $type, string $buffer) use ($output): void {
-                        $output->writeln($buffer);
+                        $output->writeln((new \DateTime())->format('Y-m-d\TH:i:sO') . $buffer);
                 });
                 $runningProcesses->set($position->getId(), $subProcess);
             }

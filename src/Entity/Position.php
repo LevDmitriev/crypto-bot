@@ -36,6 +36,9 @@ class Position
     #[ORM\Column(length: 255, nullable: false)]
     private string $strategyName;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $statusInStrategy = null;
+
     /**
      * @var Collection
      */
@@ -173,5 +176,15 @@ class Position
     public function __toString(): string
     {
         return $this->id;
+    }
+
+    public function getStatusInStrategy() : ?string
+    {
+        return $this->statusInStrategy;
+    }
+
+    public function setStatusInStrategy(?string $statusInStrategy) : void
+    {
+        $this->statusInStrategy = $statusInStrategy;
     }
 }

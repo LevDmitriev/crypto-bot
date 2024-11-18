@@ -22,6 +22,31 @@ framework:
                 close:
                     from: [Opened, Draft]
                     to: Closed
+        catch_pump_position:
+            type: 'state_machine'
+            supports: App\Entity\Position
+            initial_marking: 'new'  # Начальный статус
+            places:
+                - price_increased_2
+                - price_increased_8
+                - price_increased_12
+                - price_increased_13
+            transitions:
+                increase_2:
+                    from: new
+                    to: price_increased_2
+                increase_8:
+                    from: price_increased_2
+                    to: price_increased_8
+                increase_12:
+                    from: price_increased_8
+                    to: price_increased_12
+                increase_13:
+                    from: price_increased_12
+                    to: price_increased_13
+            marking_store:
+                type: 'method'
+                property: 'statusInStrategy'
         order:
             type: 'state_machine'
             marking_store:
