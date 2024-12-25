@@ -15,25 +15,25 @@ interface CandleInterface
 
     /**
      * Получить цену открытия
-     * @return string
+     * @return string 6 символов после запятой
      */
     public function getOpenPrice(): string;
 
     /**
      * Получить цену закрытия
-     * @return string
+     * @return string 6 символов после запятой
      */
     public function getClosePrice(): string;
 
     /**
      * Получить самую низкую цену
-     * @return string
+     * @return string 6 символов после запятой
      */
     public function getLowestPrice(): string;
 
     /**
      * Получить самую высокую цену
-     * @return string
+     * @return string 6 символов после запятой
      */
     public function getHighestPrice(): string;
 

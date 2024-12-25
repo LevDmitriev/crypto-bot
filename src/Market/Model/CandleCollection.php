@@ -10,6 +10,9 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class CandleCollection extends ArrayCollection implements CandleInterface
 {
+    /**
+     * @inheritDoc
+     */
     public function getHighestPrice(): string
     {
         assert($this->count());
@@ -57,6 +60,9 @@ class CandleCollection extends ArrayCollection implements CandleInterface
         return $last->getClosePrice();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getLowestPrice(): string
     {
         assert(!$this->isEmpty());
@@ -66,6 +72,9 @@ class CandleCollection extends ArrayCollection implements CandleInterface
         );
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getVolume(): string
     {
         assert(!$this->isEmpty());

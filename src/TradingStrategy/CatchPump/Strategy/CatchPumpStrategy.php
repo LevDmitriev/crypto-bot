@@ -50,39 +50,50 @@ class CatchPumpStrategy implements TradingStrategyInterface, LoggerAwareInterfac
     /**
      * @inheritDoc
      */
-    public function canOpenPosition(Coin $coin): bool
+    private function canOpenPosition(Coin $coin): bool
     {
         $result = false;
+        /*
+        * Открываем позицию если:
+        * - Менее 5 открытых позиций
+        * - по монете нет открытой позиции
+        * - объём торгов увеличился на 30% и более
+        * - цена увеличилась на 2% и более
+        * - За весь период разница между самой высокой и самой низкой ценой была <= 5%
+        */
         if (!$this->positionRepository->findOneNotClosedByCoin($coin) && $this->positionRepository->getTotalNotClosedCount() < 5) {
-            /** @var CandleCollection $candles7hours 7 часовая свечка */
-            $candles7hours = $this->candleRepository->find(symbol: $coin->getId() . 'USDT', interval: '15', limit: 28);
-            /** @var CandleCollection $candles7hoursExceptLast15Minutes 7 часовая свечка не включая последние 15 минут */
-            $candles7hoursExceptLast15Minutes = new CandleCollection($candles7hours->slice(1, 27));
+            /** @var int $hoursCount Количество часов за которые считаем свечки */
+            $hoursCount = 20;
+            /** @var CandleCollection $candles Свечки за все часы по 15 минут каждая в коллекции */
+            $candles = $this->candleRepository->find(symbol: $coin->getId() . 'USDT', interval: '15', limit: $hoursCount * 4);
+            /** @var CandleCollection $candlesExceptLast15Minutes Свечки не включая последние 15 минут */
+            $candlesExceptLast15Minutes = new CandleCollection($candles->slice(1, $hoursCount * 4 - 1));
             /** @var CandleInterface $candleLast15minutes Последняя 15 минутная свечка */
-            $candleLast15minutes = $candles7hours->first();
+            $candleLast15minutes = $candles->first();
             /** @var CandleInterface $candlePrevious15minutes Предыдущая 15 минутная свечка */
-            $candlePrevious15minutes = $candles7hours->get(1);
-            if (bccomp($candlePrevious15minutes->getVolume(), '0', 4) > 0 && bccomp($candles7hoursExceptLast15Minutes->getHighestPrice(), '0', 6) > 0) {
+            $candlePrevious15minutes = $candles->get(1);
+            // Если объём торгов и цена увеличились
+            if (bccomp($candlePrevious15minutes->getVolume(), '0', 4) > 0 && bccomp($candlesExceptLast15Minutes->getHighestPrice(), '0', 6) > 0) {
                 /** @var string $priceChangePercent Изменение цены */
-                $priceChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getClosePrice(), $candles7hoursExceptLast15Minutes->getHighestPrice(), 6), '1', 2), '100', 0);
+                $priceChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getClosePrice(), $candlesExceptLast15Minutes->getHighestPrice(), 6), '1', 2), '100', 0);
                 $volumeChangePercent = bcmul(bcsub(bcdiv($candleLast15minutes->getVolume(), $candlePrevious15minutes->getVolume(), 4), '1', 4), '100', 0);
+                /** @var string $volatilePercent Процент насколько самая высокая цена больше самой низкой цены. 2 знака после запятой. */
+                $volatilePercent = bcmul(bcsub(bcdiv($candles->getHighestPrice(), $candles->getLowestPrice(), 6), '1', 4), '100', 2);
 
-                /*
-                * Открываем позицию если:
-                * - по монете нет открытой позиции
-                * - объём торгов увеличился на 30% и более
-                * - цена увеличилась на 2% и более
-                */
                 /** @var bool $isVolumeChangedEnough Объёи изменился достаточно? */
                 $isVolumeChangedEnough = \bccomp($volumeChangePercent, "30", 0) >= 0;
                 /** @var bool $isPriceChangedEnough Цена изменилась достаточно? */
                 $isPriceChangedEnough = \bccomp($priceChangePercent, '2', 0) >= 0;
-                $result = $isVolumeChangedEnough && $isPriceChangedEnough;
+                /** @var bool $isVolatileEnough Волатильность достаточная? */
+                $isVolatileEnough = \bccomp('5', $volatilePercent, 2) >= 0;
+                $result = $isVolumeChangedEnough && $isPriceChangedEnough && $isVolatileEnough;
                 $message = "Обработана монета {$coin->getId()}. ";
                 if (!$isPriceChangedEnough) {
                     $message .= "Цена изменилась на $priceChangePercent";
                 } elseif (!$isVolumeChangedEnough) {
                     $message .= "Объём изменился на $volumeChangePercent";
+                } elseif (!$isVolatileEnough) {
+                    $message .= "Волатильность $priceChangePercent";
                 } else {
                     $message .= "Позиция может быть открыта";
                 }
@@ -92,7 +103,7 @@ class CatchPumpStrategy implements TradingStrategyInterface, LoggerAwareInterfac
         return $result;
     }
 
-    public function openPosition(Coin $coin): Position
+    private function openPosition(Coin $coin): Position
     {
         $scale = 6;
         $walletBalance = $this->accountRepository->getWalletBalance();
