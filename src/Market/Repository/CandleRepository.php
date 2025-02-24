@@ -27,14 +27,19 @@ class CandleRepository implements CandleRepositoryInterface
      */
     public function find(string $symbol, string $interval, string $category = Category::spot->value, int $start = null, int $end = null, int $limit = 200): CandleCollection
     {
-        $klines = $this->marketApi->getKline([
+        $parameters = [
             'category' => $category,
             'symbol' => $symbol,
             'interval' => $interval,
-            'start' => $start,
-            'end' => $end,
             'limit' => $limit,
-        ]);
+        ];
+        if ($start){
+            $parameters['start'] = $start;
+        }
+        if ($end){
+            $parameters['end'] = $end;
+        }
+        $klines = $this->marketApi->getKline($parameters);
         /** @var CandleCollection $collection */
         $collection = $this->denormalizer->denormalize($klines['list'], CandleCollection::class);
         return $collection;
