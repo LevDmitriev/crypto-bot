@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "40cf21eb0025a0d00dff79dc4c913b5f",
+    "content-hash": "ce796d58780f291bf56360e4e7b62979",
     "packages": [
         {
             "name": "behat/transliterator",
@@ -1656,16 +1656,16 @@
         },
         {
             "name": "goodmagma/bybit-php-api",
-            "version": "v0.6.1",
+            "version": "v0.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/goodmagma/bybit-php-api.git",
-                "reference": "46a87ec27c8cf507ebe57734754420102a875947"
+                "reference": "5503058855adb803a101ab6c1a1dd16ec502dd54"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/goodmagma/bybit-php-api/zipball/46a87ec27c8cf507ebe57734754420102a875947",
-                "reference": "46a87ec27c8cf507ebe57734754420102a875947",
+                "url": "https://api.github.com/repos/goodmagma/bybit-php-api/zipball/5503058855adb803a101ab6c1a1dd16ec502dd54",
+                "reference": "5503058855adb803a101ab6c1a1dd16ec502dd54",
                 "shasum": ""
             },
             "require": {
@@ -1698,9 +1698,9 @@
             ],
             "support": {
                 "issues": "https://github.com/goodmagma/bybit-php-api/issues",
-                "source": "https://github.com/goodmagma/bybit-php-api/tree/v0.6.1"
+                "source": "https://github.com/goodmagma/bybit-php-api/tree/v0.7.0"
             },
-            "time": "2023-10-19T09:09:20+00:00"
+            "time": "2024-08-26T14:46:06+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
